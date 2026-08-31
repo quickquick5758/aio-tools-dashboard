@@ -1745,6 +1745,34 @@
     </div>
 
     <script>
+        // 1. Masukkan URL Web App /exec Anda di sini
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzQHJyU8uwEdX0PACe4RMMDqaSJkD13x_jiCYPuTA-m2TiR4tReQpf9AWDkvATJ93HB/exec"; 
+        
+        // 2. Fungsi Pembantu Pengganti google.script.run
+        async function panggilBackend(actionName, payloadData) {
+          try {
+            let response = await fetch(GAS_URL, {
+              method: "POST",
+              redirect: "follow",
+              headers: { "Content-Type": "text/plain;charset=utf-8" },
+              body: JSON.stringify({ 
+                action: actionName, 
+                payload: payloadData 
+              })
+            });
+            
+            let result = await response.json();
+            
+            if (result.status === 'success') {
+              return result.data; // Mengembalikan data persis seperti google.script.run
+            } else {
+              throw new Error(result.message);
+            }
+          } catch (error) {
+            console.error("Gagal memanggil backend:", error);
+            throw error;
+          }
+        }
         // --- FUNGSI TOGGLE SIDEBAR MOBILE ---
         function toggleSidebar() {
             if (window.innerWidth <= 768) {
@@ -2994,7 +3022,7 @@
             renderLaporanTable(filtered, 1);
         }
 
-        function handleLogin(event) {
+        async function handleLogin(event) {
             if(event) event.preventDefault(); 
             
             const btn = document.querySelector('.login-btn');
