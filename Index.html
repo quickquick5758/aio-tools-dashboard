@@ -1773,6 +1773,7 @@
             throw error;
           }
         }
+
         // --- FUNGSI TOGGLE SIDEBAR MOBILE ---
         function toggleSidebar() {
             if (window.innerWidth <= 768) {
@@ -1865,7 +1866,7 @@
             container.appendChild(nextBtn);
         }
 
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", async function() {
 
             // --- Event Delegation untuk semua input dinamis ---
             document.body.addEventListener('input', function(e) {
@@ -1904,57 +1905,58 @@
                 }
             });
 
-
-            if (typeof google !== 'undefined' && google.script && google.script.run) {
-                google.script.run
-                    .withSuccessHandler(data => {
-                        if (!data) data = [];
-                        allOperators = data;
-                        const karus = [...new Set(data.map(i => i.karu))];
-                        const peks = [...new Set(data.map(i => i.pekerjaan))];
-                        const kSelect = document.getElementById('select-karu');
-                        const bsKaruSelect = document.getElementById('bs-karu');
-                        const pSelect = document.getElementById('select-pek');
-                        
-                        karus.forEach(k => {
-                            if(k) {
-                                if(kSelect) kSelect.innerHTML += `<option value="${k}">${k}</option>`;
-                                if(bsKaruSelect) bsKaruSelect.innerHTML += `<option value="${k}">${k}</option>`;
-                            }
-                        });
-                        peks.forEach(p => {
-                            if(p && pSelect) pSelect.innerHTML += `<option value="${p}">${p}</option>`;
-                        });
-                        
-                        // Render kartu operator di halaman performa jika data master sudah siap
-                        renderPerformaOperatorTiles();
-                    })
-                    .withFailureHandler(err => {
-                        console.error("Gagal memuat operator:", err);
-                    })
-                    .getMasterOperatorData();
-
-                google.script.run
-                    .withSuccessHandler(res => {
-                        if(res && res.success) {
-                            window.allMasterBarang = res.data;
-                        } else {
-                            window.allMasterBarang = [];
-                        }
-                    })
-                    .withFailureHandler(err => {
-                        console.error("Gagal memuat master barang:", err);
-                        window.allMasterBarang = [];
-                    })
-                    .getMasterBarangData();
-
-                // Muat data saldo mutasi gudang
-                google.script.run
-                    .withSuccessHandler(res => {
-                        window.allMutasiData = (res && res.success) ? res.data : [];
-                    })
-                    .getSaldoMutasiData();
+            // --- Pemanggilan Data Master dari Backend (Fetch API) ---
+            
+            // 1. Muat Data Operator
+            try {
+                let data = await panggilBackend('getMasterOperatorData', {});
+                if (!data) data = [];
+                allOperators = data;
+                const karus = [...new Set(data.map(i => i.karu))];
+                const peks = [...new Set(data.map(i => i.pekerjaan))];
+                const kSelect = document.getElementById('select-karu');
+                const bsKaruSelect = document.getElementById('bs-karu');
+                const pSelect = document.getElementById('select-pek');
+                
+                karus.forEach(k => {
+                    if(k) {
+                        if(kSelect) kSelect.innerHTML += `<option value="${k}">${k}</option>`;
+                        if(bsKaruSelect) bsKaruSelect.innerHTML += `<option value="${k}">${k}</option>`;
+                    }
+                });
+                peks.forEach(p => {
+                    if(p && pSelect) pSelect.innerHTML += `<option value="${p}">${p}</option>`;
+                });
+                
+                // Render kartu operator di halaman performa jika data master sudah siap
+                if(typeof renderPerformaOperatorTiles === 'function') renderPerformaOperatorTiles();
+            } catch (err) {
+                console.error("Gagal memuat operator:", err);
             }
+
+            // 2. Muat Master Barang
+            try {
+                let res = await panggilBackend('getMasterBarangData', {});
+                if(res && res.success) {
+                    window.allMasterBarang = res.data;
+                } else {
+                    window.allMasterBarang = [];
+                }
+            } catch (err) {
+                console.error("Gagal memuat master barang:", err);
+                window.allMasterBarang = [];
+            }
+
+            // 3. Muat Saldo Mutasi
+            try {
+                let res = await panggilBackend('getSaldoMutasiData', {});
+                window.allMutasiData = (res && res.success) ? res.data : [];
+            } catch (err) {
+                console.error("Gagal memuat saldo mutasi:", err);
+                window.allMutasiData = [];
+            }
+
+        });
 
             const now = new Date();
             const year = now.getFullYear();
@@ -1986,47 +1988,65 @@
             }
         }
 
-        function loadDashboardStats() {
-            if (typeof google !== 'undefined') {
-                google.script.run
-                    .withSuccessHandler(function(res) {
-                        if (res && res.success) {
-                            // Populate QTY Stats
-                            document.getElementById('stat-qty-masuk').innerHTML = `${Number(res.qty.masuk).toLocaleString('id-ID')} <span>Pcs</span>`;
-                            document.getElementById('stat-qty-prod').innerHTML = `${Number(res.qty.prod).toLocaleString('id-ID')} <span>Pcs</span>`;
-                            document.getElementById('stat-qty-kirim').innerHTML = `${Number(res.qty.kirim).toLocaleString('id-ID')} <span>Pcs</span>`;
-                            
-                            // Populate Rupiah Stats
-                            document.getElementById('stat-rp-masuk').textContent = `Rp ${Number(res.rp.masuk).toLocaleString('id-ID')}`;
-                            document.getElementById('stat-rp-prod').textContent = `Rp ${Number(res.rp.prod).toLocaleString('id-ID')}`;
-                            document.getElementById('stat-rp-kirim').textContent = `Rp ${Number(res.rp.kirim).toLocaleString('id-ID')}`;
+        async function loadDashboardStats() {
+            try {
+                let res = await panggilBackend('getDashboardStats', {});
+                
+                if (res && res.success) {
+                    // Populate QTY Stats
+                    document.getElementById('stat-qty-masuk').innerHTML = `${Number(res.qty.masuk).toLocaleString('id-ID')} <span>Pcs</span>`;
+                    document.getElementById('stat-qty-prod').innerHTML = `${Number(res.qty.prod).toLocaleString('id-ID')} <span>Pcs</span>`;
+                    document.getElementById('stat-qty-kirim').innerHTML = `${Number(res.qty.kirim).toLocaleString('id-ID')} <span>Pcs</span>`;
+                    
+                    // Populate Rupiah Stats
+                    document.getElementById('stat-rp-masuk').textContent = `Rp ${Number(res.rp.masuk).toLocaleString('id-ID')}`;
+                    document.getElementById('stat-rp-prod').textContent = `Rp ${Number(res.rp.prod).toLocaleString('id-ID')}`;
+                    document.getElementById('stat-rp-kirim').textContent = `Rp ${Number(res.rp.kirim).toLocaleString('id-ID')}`;
 
-                            // Populate Active Operators (Dynamic from report)
-                                    document.getElementById('stat-op-total').innerHTML = `${res.operators.total} <span style="font-size:14px; font-weight:400; color:#e0e5ff;">Orang</span>`;
-                                    const unitContainer = document.getElementById('stat-op-units');
-                                    unitContainer.innerHTML = '';
-                                    
-                                    for (let unit in res.operators.units) {
-                                        const shortUnit = unit.replace('CV ', '');
-                                        unitContainer.innerHTML += `<span class="badge font-bold">${shortUnit}: ${res.operators.units[unit]}</span>`;
-                                    }
-                                    
-                                    // Render Data Grafik Terkini
-                                    window.dashboardChartData = res.chartData || {};
-                                    updateDashboardChart();
-                                }
-                            })
-                            .getDashboardStats();
-            } else {
-                // Fallback jika tidak terhubung ke backend
-                document.getElementById('stat-qty-masuk').innerHTML = `15.243 <span>Pcs</span>`;
-                document.getElementById('stat-qty-prod').innerHTML = `1.554 <span>Pcs</span>`;
-                document.getElementById('stat-qty-kirim').innerHTML = `10.409 <span>Pcs</span>`;
-                document.getElementById('stat-rp-masuk').textContent = `Rp 15.913.158`;
-                document.getElementById('stat-rp-prod').textContent = `Rp 90.811`;
-                document.getElementById('stat-rp-kirim').textContent = `Rp 8.402.859`;
-                document.getElementById('stat-op-total').innerHTML = `48 <span style="font-size:14px; font-weight:400; color:#e0e5ff;">Orang</span>`;
-                document.getElementById('stat-op-units').innerHTML = `<span class="badge font-bold">JHB 1: 20</span><span class="badge font-bold">JHB 2: 28</span>`;
+                    // Populate Active Operators (Dynamic from report)
+                    document.getElementById('stat-op-total').innerHTML = `${res.operators.total} <span style="font-size:14px; font-weight:400; color:#e0e5ff;">Orang</span>`;
+                    const unitContainer = document.getElementById('stat-op-units');
+                    if (unitContainer) {
+                        unitContainer.innerHTML = '';
+                        for (let unit in res.operators.units) {
+                            const shortUnit = unit.replace('CV ', '');
+                            unitContainer.innerHTML += `<span class="badge font-bold">${shortUnit}: ${res.operators.units[unit]}</span>`;
+                        }
+                    }
+                    
+                    // Render Data Grafik Terkini
+                    window.dashboardChartData = res.chartData || {};
+                    if (typeof updateDashboardChart === 'function') updateDashboardChart();
+                } else {
+                    console.error("Gagal memuat dashboard stats:", res?.message);
+                }
+            } catch (error) {
+                console.error("Error loadDashboardStats:", error);
+                
+                // Fallback jika tidak terhubung ke backend atau terjadi error
+                const qtyMasuk = document.getElementById('stat-qty-masuk');
+                if (qtyMasuk) qtyMasuk.innerHTML = `132.687 <span>Pcs</span>`;
+                
+                const qtyProd = document.getElementById('stat-qty-prod');
+                if (qtyProd) qtyProd.innerHTML = `121.719 <span>Pcs</span>`;
+                
+                const qtyKirim = document.getElementById('stat-qty-kirim');
+                if (qtyKirim) qtyKirim.innerHTML = `137.516 <span>Pcs</span>`;
+                
+                const rpMasuk = document.getElementById('stat-rp-masuk');
+                if (rpMasuk) rpMasuk.textContent = `Rp 104.195.065`;
+                
+                const rpProd = document.getElementById('stat-rp-prod');
+                if (rpProd) rpProd.textContent = `Rp 102.052.763`;
+                
+                const rpKirim = document.getElementById('stat-rp-kirim');
+                if (rpKirim) rpKirim.textContent = `Rp 100.278.560`;
+                
+                const opTotal = document.getElementById('stat-op-total');
+                if (opTotal) opTotal.innerHTML = `48 <span style="font-size:14px; font-weight:400; color:#e0e5ff;">Orang</span>`;
+                
+                const opUnits = document.getElementById('stat-op-units');
+                if (opUnits) opUnits.innerHTML = `<span class="badge font-bold">JHB 1: 20</span><span class="badge font-bold">JHB 2: 28</span>`;
             }
         }
 
@@ -2121,7 +2141,7 @@
             }
         }
 
-        function switchView(viewName, element) {
+        async function switchView(viewName, element) {
             // Tutup sidebar otomatis di mobile setelah klik menu
             if (window.innerWidth <= 768) {
                 const sidebar = document.getElementById('mainSidebar');
@@ -2171,7 +2191,7 @@
             if(element) {
                 element.classList.add('active');
                 if (element.classList.contains('submenu-item')) {
-                     element.style.color = '#4318ff'; // Highlight color specific to submenu items
+                    element.style.color = '#4318ff'; // Highlight color specific to submenu items
                 }
             }
 
@@ -2191,26 +2211,29 @@
                 }
                 if(viewName === 'data-laporan') {
                     if(document.getElementById('filter-laporan-search')) document.getElementById('filter-laporan-search').value = '';
-                    loadLaporanData();
+                    if(typeof loadLaporanData === 'function') loadLaporanData();
                 }
                 if(viewName === 'buku-pengecekan') {
                     if(document.getElementById('filter-bpc-search')) document.getElementById('filter-bpc-search').value = '';
-                    loadBbkGlobalData();
+                    if(typeof loadBbkGlobalData === 'function') loadBbkGlobalData();
                 }
                 if(viewName === 'sisa-om') {
                     if(document.getElementById('filter-sisaom-search')) document.getElementById('filter-sisaom-search').value = '';
-                    loadSisaOmData();
+                    if(typeof loadSisaOmData === 'function') loadSisaOmData();
                 }
                 if(viewName === 'tracking-sj') {
                     if(document.getElementById('filter-trackingsj-search')) document.getElementById('filter-trackingsj-search').value = '';
-                    loadTrackingSj();
+                    if(typeof loadTrackingSj === 'function') loadTrackingSj();
                 }
-                if(viewName === 'data-view' && typeof google !== 'undefined') {
+                if(viewName === 'data-view') {
                     if(document.getElementById('filter-view-search')) document.getElementById('filter-view-search').value = '';
-                    google.script.run.withSuccessHandler(data => {
+                    try {
+                        let data = await panggilBackend('getDataProduksi', {});
                         window.rawViewData = data;
-                        filterViewData();
-                    }).getDataProduksi(); 
+                        if(typeof filterViewData === 'function') filterViewData();
+                    } catch (error) {
+                        console.error("Gagal memuat data produksi:", error);
+                    }
                 }
 
                 if(viewName === 'performa') {
@@ -2220,26 +2243,27 @@
                         monthEl.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}`;
                     }
                     if(window.allMasterBarang && window.allMasterBarang.length > 0) {
-                        renderPerformaBarChart();
+                        if(typeof renderPerformaBarChart === 'function') renderPerformaBarChart();
                     }
                     if(!window.rawViewData || window.rawViewData.length === 0) {
-                        if (typeof google !== 'undefined') {
-                            google.script.run.withSuccessHandler(data => {
-                                window.rawViewData = data || [];
-                                renderPerformaOperators();
-                            }).getDataProduksi(); 
+                        try {
+                            let data = await panggilBackend('getDataProduksi', {});
+                            window.rawViewData = data || [];
+                            if(typeof renderPerformaOperators === 'function') renderPerformaOperators();
+                        } catch (error) {
+                            console.error("Gagal memuat data performa:", error);
                         }
                     } else {
-                        renderPerformaOperators();
+                        if(typeof renderPerformaOperators === 'function') renderPerformaOperators();
                     }
                 }
                 if(viewName === 'summary') {
-                    renderSummaryView();
+                    if(typeof renderSummaryView === 'function') renderSummaryView();
                 }
             }
         }
 
-        function loadMasterData() {
+        async function loadMasterData() {
             const btn = document.getElementById('btnRefreshMaster');
             const txt = document.getElementById('btnRefreshText');
             const tbody = document.getElementById('tbody-master');
@@ -2248,25 +2272,23 @@
             if(btn) { btn.disabled = true; btn.style.opacity = '0.7'; }
             if(txt) txt.textContent = 'Memuat...';
 
-            if (typeof google !== 'undefined') {
-                google.script.run
-                    .withSuccessHandler(function(response) {
-                        if(btn) { btn.disabled = false; btn.style.opacity = '1'; }
-                        if(txt) txt.textContent = 'Muat Ulang Data';
+            try {
+                let response = await panggilBackend('getMasterBarangData', {});
+                
+                if(btn) { btn.disabled = false; btn.style.opacity = '1'; }
+                if(txt) txt.textContent = 'Muat Ulang Data';
 
-                        if(response && response.success) {
-                            window.allMasterBarang = response.data;
-                            renderMasterTable(response.data, 1);
-                        } else {
-                            tbody.innerHTML = `<tr><td colspan="18" style="text-align:center; color:#ee5d50;">Gagal memuat: ${response ? response.message : 'Data kosong'}</td></tr>`;
-                        }
-                    })
-                    .withFailureHandler(function(error) {
-                        if(btn) { btn.disabled = false; btn.style.opacity = '1'; }
-                        if(txt) txt.textContent = 'Coba Lagi';
-                        tbody.innerHTML = `<tr><td colspan="18" style="text-align:center; color:#ee5d50;">Koneksi error: Server tidak merespon.</td></tr>`;
-                    })
-                    .getMasterBarangData();
+                if(response && response.success) {
+                    window.allMasterBarang = response.data;
+                    if(typeof renderMasterTable === 'function') renderMasterTable(response.data, 1);
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="18" style="text-align:center; color:#ee5d50;">Gagal memuat: ${response ? response.message : 'Data kosong'}</td></tr>`;
+                }
+            } catch (error) {
+                if(btn) { btn.disabled = false; btn.style.opacity = '1'; }
+                if(txt) txt.textContent = 'Coba Lagi';
+                tbody.innerHTML = `<tr><td colspan="18" style="text-align:center; color:#ee5d50;">Koneksi error: Server tidak merespon.</td></tr>`;
+                console.error("Error loadMasterData:", error);
             }
         }
 
@@ -2342,7 +2364,7 @@
             renderPaginationButtons('master', 'pagination-master', renderMasterTable);
         }
 
-        function loadLaporanData() {
+        async function loadLaporanData() {
             const tbody = document.getElementById('tbody-laporan');
             const btnRefresh = document.getElementById('btn-refresh-laporan');
             if(!tbody) return;
@@ -2350,59 +2372,45 @@
             if(btnRefresh) { btnRefresh.innerHTML = 'Memuat...'; btnRefresh.disabled = true; }
             tbody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:20px; color:#8f9bba;">Memuat data detail produksi...</td></tr>';
             
-            if (typeof google !== 'undefined') {
-                // 1. Load data sedikit (baris terakhir) agar instan
-                google.script.run
-                    .withSuccessHandler(function(data) {
-                        window.rawLaporanData = data || [];
-                        filterLaporanData();
-                        if (typeof filterBukuPengecekanData === 'function') filterBukuPengecekanData();
-                        
-                        // 2. Load sisanya di background tanpa interupsi
-                        google.script.run
-                            .withSuccessHandler(function(fullData) {
-                                window.rawLaporanData = fullData || [];
-                                filterLaporanData();
-                                if (typeof filterBukuPengecekanData === 'function') filterBukuPengecekanData();
-                                if(btnRefresh) { btnRefresh.innerHTML = '<svg style="width:14px; height:14px; margin-right:4px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh'; btnRefresh.disabled = false; }
-                            })
-                            .getDataLaporan();
+            try {
+                // Ambil data terbaru secara async
+                const data = await panggilBackend('getDataLaporanLatest', {});
+                window.rawLaporanData = data || [];
+                filterLaporanData();
+                
+                // Load data sisanya di background
+                const fullData = await panggilBackend('getDataLaporan', {});
+                window.rawLaporanData = fullData || [];
+                filterLaporanData();
 
-                        // Load data view details di background
-                        google.script.run.withSuccessHandler(detailData => {
-                            window.rawViewData = detailData || [];
-                        }).getDataProduksi();
-                        
-                        if (typeof refreshSaldoBackground === 'function') refreshSaldoBackground();
-                    })
-                    .withFailureHandler(err => {
-                        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#ee5d50;">Gagal memuat data laporan.</td></tr>`;
-                        if(btnRefresh) { btnRefresh.innerHTML = 'Coba Lagi'; btnRefresh.disabled = false; }
-                    })
-                    .getDataLaporanLatest();
+                if(btnRefresh) { 
+                    btnRefresh.innerHTML = '<svg style="width:14px; height:14px; margin-right:4px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh'; 
+                    btnRefresh.disabled = false; 
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#ee5d50;">Gagal memuat data: ${err.message}</td></tr>`;
+                if(btnRefresh) { btnRefresh.innerHTML = 'Coba Lagi'; btnRefresh.disabled = false; }
             }
         }
 
-        function refreshViewData() {
+        async function refreshViewData() {
             const tbody = document.getElementById('tbody-view-data');
             const btnRefresh = document.getElementById('btn-refresh-view');
             if(!tbody) return;
             
             if(btnRefresh) { btnRefresh.innerHTML = 'Memuat...'; btnRefresh.disabled = true; }
-            tbody.innerHTML = '<tr><td colspan="16" style="text-align:center; padding:20px; color:#8f9bba;">Memuat data detail produksi...</td></tr>';
             
-            if (typeof google !== 'undefined') {
-                google.script.run
-                    .withSuccessHandler(function(data) {
-                        window.rawViewData = data || [];
-                        filterViewData();
-                        if(btnRefresh) { btnRefresh.innerHTML = '<svg style="width:14px; height:14px; margin-right:4px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh'; btnRefresh.disabled = false; }
-                    })
-                    .withFailureHandler(err => {
-                        tbody.innerHTML = `<tr><td colspan="17" style="text-align:center; color:#ee5d50;">Gagal memuat data detail.</td></tr>`;
-                        if(btnRefresh) { btnRefresh.innerHTML = 'Coba Lagi'; btnRefresh.disabled = false; }
-                    })
-                    .getDataProduksi();
+            try {
+                const data = await panggilBackend('getDataProduksi', {});
+                window.rawViewData = data || [];
+                filterViewData();
+                if(btnRefresh) { 
+                    btnRefresh.innerHTML = 'Refresh'; 
+                    btnRefresh.disabled = false; 
+                }
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="17" style="text-align:center; color:#ee5d50;">Gagal: ${error.message}</td></tr>`;
+                if(btnRefresh) btnRefresh.disabled = false;
             }
         }
 
@@ -2718,32 +2726,26 @@
         }
 
         // --- BUKU PENGECEKAN: Load Data dari DATA_PENGECEKAN_BBK_GLOBAL ---
-        function loadBbkGlobalData() {
+        async function loadBbkGlobalData() {
             const tbody = document.getElementById('tbody-buku-pengecekan');
             const btnRefresh = document.getElementById('btn-refresh-bpc');
             if(!tbody) return;
             
             if(btnRefresh) { btnRefresh.innerHTML = 'Memuat...'; btnRefresh.disabled = true; }
-            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:20px; color:#8f9bba;">Memuat data Buku Pengecekan BBK...</td></tr>';
             
-            if (typeof google !== 'undefined') {
-                // Ambil Data Global
-                google.script.run
-                    .withSuccessHandler(function(data) {
-                        window.rawBbkGlobalData = data || [];
-                        filterBukuPengecekanData();
-                        if(btnRefresh) { btnRefresh.innerHTML = '<svg style="width:14px; height:14px; margin-right:4px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh'; btnRefresh.disabled = false; }
-                        
-                        // Ambil Data Detail BBK di background untuk Intip/Buka
-                        google.script.run.withSuccessHandler(detail => {
-                            window.rawBbkDetailData = detail || [];
-                        }).getBbkDetailData();
-                    })
-                    .withFailureHandler(err => {
-                        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:#ee5d50;">Gagal memuat data Buku Pengecekan.</td></tr>`;
-                        if(btnRefresh) { btnRefresh.innerHTML = 'Coba Lagi'; btnRefresh.disabled = false; }
-                    })
-                    .getBbkGlobalData();
+            try {
+                const data = await panggilBackend('getBbkGlobalData', {});
+                window.rawBbkGlobalData = data || [];
+                filterBukuPengecekanData();
+                
+                // Detail dimuat di background
+                const detail = await panggilBackend('getBbkDetailData', {});
+                window.rawBbkDetailData = detail || [];
+                
+                if(btnRefresh) { btnRefresh.innerHTML = 'Refresh'; btnRefresh.disabled = false; }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:#ee5d50;">Gagal: ${err.message}</td></tr>`;
+                if(btnRefresh) btnRefresh.disabled = false;
             }
         }
 
@@ -5294,48 +5296,61 @@
                 }
             });
         }
-        function approveDokumenLaporan(idLaporan) {
-            showDialog(`Apakah Anda yakin ingin menyetujui dokumen laporan ${idLaporan}?`, "confirm", () => {
+
+            function approveDokumenLaporan(idLaporan) {
+            // Perhatikan penambahan kata 'async' di sini 👇
+            showDialog(`Apakah Anda yakin ingin menyetujui dokumen laporan ${idLaporan}?`, "confirm", async () => {
+                
                 const btnApprove = document.getElementById('btn-approve-action');
-                if (btnApprove) { btnApprove.textContent = 'Memproses...'; btnApprove.disabled = true; btnApprove.style.opacity = '0.7'; }
-                if (typeof google !== 'undefined') {
-                    google.script.run
-                        .withSuccessHandler(res => {
-                            if (res && res.success) {
-                                    const modalAnim = document.getElementById('modal-success-anim');
-                                    const loaderContainer = document.getElementById('loader-icon-container');
-                                    const checkContainer = document.getElementById('success-check-container');
-                                    const titleText = document.getElementById('modal-title-text');
-                                    const descText = document.getElementById('modal-desc-text');
-                                    
-                                    if(loaderContainer) loaderContainer.style.display = 'none';
-                                    if(checkContainer) checkContainer.style.display = 'flex';
-                                    if(titleText) titleText.textContent = "Berhasil Disetujui!";
-                                    if(descText) descText.innerHTML = `Dokumen <b>${idLaporan}</b> telah di-Approve.`;
-                                    
-                                    const docNumEl = document.getElementById('success-doc-number');
-                                    if(docNumEl) docNumEl.textContent = idLaporan;
-                                    
-                                    if(modalAnim) modalAnim.style.display = 'flex';
-                                    
-                                    document.getElementById('doc-open-badge').innerHTML = '<span style="background:#e0e5ff; color:#4318ff; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; vertical-align:middle; margin-left:10px;">APPROVED</span>';
-                                    document.getElementById('doc-open-actions').style.display = 'none';
-                                    if (window.currentEditingReport) window.currentEditingReport[9] = 'Approved';
-                                    loadLaporanData(); 
-                                    
-                                    setTimeout(() => {
-                                        if(modalAnim) modalAnim.style.display = 'none';
-                                    }, 2000);
-                                } else {
-                                showDialog("Gagal Approve: " + (res ? res.message : "Kesalahan internal"), "warning");
-                                if (btnApprove) { btnApprove.textContent = 'Approve'; btnApprove.disabled = false; btnApprove.style.opacity = '1'; }
-                            }
-                        })
-                        .withFailureHandler(err => {
-                            showDialog("Gagal koneksi ke server Apps Script.", "warning");
-                            if (btnApprove) { btnApprove.textContent = 'Approve'; btnApprove.disabled = false; btnApprove.style.opacity = '1'; }
-                        })
-                        .updateStatusApprove(idLaporan);
+                if (btnApprove) { 
+                    btnApprove.textContent = 'Memproses...'; 
+                    btnApprove.disabled = true; 
+                    btnApprove.style.opacity = '0.7'; 
+                }
+
+                try {
+                    // Nembak ke Backend pakai fetch (pengganti google.script.run)
+                    const res = await panggilBackend('updateStatusApprove', { idLaporan: idLaporan });
+                    
+                    if (res && res.success) {
+                        // Munculkan Modal Animasi Sukses
+                        const modalAnim = document.getElementById('modal-success-anim');
+                        const loaderContainer = document.getElementById('loader-icon-container');
+                        const checkContainer = document.getElementById('success-check-container');
+                        const titleText = document.getElementById('modal-title-text');
+                        const descText = document.getElementById('modal-desc-text');
+                        
+                        if(loaderContainer) loaderContainer.style.display = 'none';
+                        if(checkContainer) checkContainer.style.display = 'flex';
+                        if(titleText) titleText.textContent = "Berhasil Disetujui!";
+                        if(descText) descText.innerHTML = `Dokumen <b>${idLaporan}</b> telah di-Approve.`;
+                        
+                        const docNumEl = document.getElementById('success-doc-number');
+                        if(docNumEl) docNumEl.textContent = idLaporan;
+                        
+                        if(modalAnim) modalAnim.style.display = 'flex';
+                        
+                        // Ubah Tampilan Badge di Dokumen Buka jadi APPROVED
+                        document.getElementById('doc-open-badge').innerHTML = '<span style="background:#e0e5ff; color:#4318ff; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; vertical-align:middle; margin-left:10px;">APPROVED</span>';
+                        document.getElementById('doc-open-actions').style.display = 'none';
+                        
+                        if (window.currentEditingReport) window.currentEditingReport[9] = 'Approved';
+                        loadLaporanData(); 
+                        
+                        setTimeout(() => {
+                            if(modalAnim) modalAnim.style.display = 'none';
+                        }, 2000);
+
+                    } else {
+                        throw new Error(res ? res.message : "Kesalahan server");
+                    }
+                } catch (err) {
+                    showDialog("Gagal Approve: " + err.message, "warning");
+                    if (btnApprove) { 
+                        btnApprove.textContent = 'Approve'; 
+                        btnApprove.disabled = false; 
+                        btnApprove.style.opacity = '1'; 
+                    }
                 }
             });
         }
@@ -5579,52 +5594,58 @@
             }
         }
 
-        function executeFinalSubmit() {
-            const modalAnim = document.getElementById('modal-success-anim');
-            const loaderContainer = document.getElementById('loader-icon-container');
-            const checkContainer = document.getElementById('success-check-container');
-            const titleText = document.getElementById('modal-title-text');
-            const descText = document.getElementById('modal-desc-text');
-            const docNumEl = document.getElementById('success-doc-number');
-            
-            // Langsung tampilkan status SUKSES ke user agar UX cepat
-            if(loaderContainer) loaderContainer.style.display = 'none';
-            if(checkContainer) checkContainer.style.display = 'flex';
-            if(titleText) titleText.textContent = "Berhasil Dikirim!";
-            if(descText) descText.innerHTML = "Data sedang disimpan ke server di <b>Latar Belakang</b>.";
-            if(docNumEl) docNumEl.textContent = "Memproses ID...";
-            
-            if(modalAnim) modalAnim.style.display = 'flex';
-            switchView('data-laporan');
+        async function executeFinalSubmit() {
+          const modalAnim = document.getElementById('modal-success-anim');
+          const loaderContainer = document.getElementById('loader-icon-container');
+          const checkContainer = document.getElementById('success-check-container');
+          const titleText = document.getElementById('modal-title-text');
+          const descText = document.getElementById('modal-desc-text');
+          const docNumEl = document.getElementById('success-doc-number');
+          const btnOk = document.getElementById('btn-success-ok');
+          
+          // 1. Tampilkan Box Loading di Layar
+          if(loaderContainer) loaderContainer.style.display = 'block';
+          if(checkContainer) checkContainer.style.display = 'none';
+          if(btnOk) btnOk.style.display = 'none';
+          if(titleText) titleText.textContent = "Menyimpan Data...";
+          if(descText) descText.innerHTML = "Mohon tunggu, sistem sedang memproses dokumen...";
+          if(docNumEl) docNumEl.textContent = "Memproses...";
+          
+          if(modalAnim) modalAnim.style.display = 'flex';
+          switchView('data-laporan');
 
-            if (typeof google !== 'undefined') {
-                // Eksekusi penulisan sheet tanpa harus memblokir form
-                google.script.run
-                    .withSuccessHandler(res => {
-                        if(res && res.success) {
-                             // Fetch data baru secara pasif di latar belakang 
-                             google.script.run.withSuccessHandler(data => {
-                                 window.rawLaporanData = data || [];
-                                 filterLaporanData();
-                             }).getDataLaporanLatest();
-                             // Memicu pembaruan statistik dashboard otomatis tanpa login ulang
-                             loadDashboardStats();
-                             // Refresh Mutasi agar saldo real-time setelah submit
-                             google.script.run.withSuccessHandler(res => {
-                                 window.allMutasiData = (res && res.success) ? res.data : [];
-                             }).getSaldoMutasiData();
-                        }
-                    })
-                    .saveProduksiToSheet(globalPayloadToSubmit);
+          try {
+              // 2. Kirim data ke Google Sheets via Web App
+              const res = await panggilBackend('saveProduksiToSheet', globalPayloadToSubmit);
+              
+              if(res && res.success) {
+                  // 3. Jika Sukses, ubah tampilan modal jadi Ceklis Hijau
+                  if(loaderContainer) loaderContainer.style.display = 'none';
+                  if(checkContainer) checkContainer.style.display = 'flex';
+                  if(titleText) titleText.textContent = "Berhasil Dikirim!";
+                  if(descText) descText.innerHTML = "Data telah tersimpan di server.";
+                  if(docNumEl) docNumEl.textContent = res.idLaporan || "Tersimpan";
+                  if(btnOk) btnOk.style.display = 'block';
 
-                // Tutup modal dan bersihkan form segera
-                setTimeout(() => {
-                    if(modalAnim) modalAnim.style.display = 'none';
-                    resetAllProductionForms(); 
-                    loadLaporanData(); // Load versi cepat
-                }, 1200);
-            }
-        }
+                  // 4. Tarik data terbaru di belakang layar
+                  const data = await panggilBackend('getDataLaporanLatest', {});
+                  window.rawLaporanData = data || [];
+                  filterLaporanData();
+                  
+                  loadDashboardStats();
+                  
+                  const mutasiRes = await panggilBackend('getSaldoMutasiData', {});
+                  window.allMutasiData = (mutasiRes && mutasiRes.success) ? mutasiRes.data : [];
+                  
+              } else {
+                  throw new Error(res ? res.message : "Gagal menyimpan data");
+              }
+          } catch (error) {
+              // Kalau internet putus atau sheet gagal tulis
+              if(modalAnim) modalAnim.style.display = 'none';
+              showDialog("Gagal Kirim: " + error.message, "warning");
+          }
+      }
 
         // --- TAMBAHAN: Fungsi Navigasi Keyboard (Up/Down/Enter) ---
         function navigateSuggestions(event, inputEl) {

@@ -916,3 +916,86 @@ function saveBbkToSheet(data) {
     return { success: false, message: error.toString() };
   }
 }
+
+// Tambahkan ini di file Kode.gs Anda
+// Tambahkan ini di file Kode.gs Anda (Gantikan doPost yang lama)
+function doPost(e) {
+  try {
+    // Tangkap request dari frontend
+    let request = JSON.parse(e.postData.contents);
+    let action = request.action;   // Nama fungsi yang ingin dipanggil
+    let payload = request.payload; // Data yang dikirim (parameter)
+    
+    let result;
+
+    // --- SISTEM ROUTER ---
+    // Arahkan ke fungsi asli Anda berdasarkan 'action'
+    if (action === 'verifikasiLogin') {
+      result = verifikasiLogin(payload.username, payload.password);
+    } 
+    else if (action === 'getMasterBarangData') {
+      result = getMasterBarangData();
+    }
+    else if (action === 'getMasterOperatorData') {
+      result = getMasterOperatorData();
+    }
+    else if (action === 'getSaldoMutasiData') {
+      result = getSaldoMutasiData();
+    }
+    else if (action === 'getDashboardStats') {
+      result = getDashboardStats();
+    }
+    else if (action === 'getDataLaporanLatest') {
+      result = getDataLaporanLatest();
+    }
+    else if (action === 'getDataLaporan') {
+      result = getDataLaporan();
+    }
+    else if (action === 'getDataProduksi') {
+      result = getDataProduksi();
+    }
+    else if (action === 'getBbkGlobalData') {
+      result = getBbkGlobalData();
+    }
+    else if (action === 'getBbkDetailData') {
+      result = getBbkDetailData();
+    }
+    else if (action === 'saveProduksiToSheet') {
+      // payload diasumsikan berisi object 'data'
+      result = saveProduksiToSheet(payload); 
+    }
+    else if (action === 'getSisaOmData') {
+      result = getSisaOmData();
+    }
+    else if (action === 'updateStatusBatal') {
+      result = updateStatusBatal(payload.idLaporan);
+    }
+    else if (action === 'updateStatusApprove') {
+      result = updateStatusApprove(payload.idLaporan);
+    }
+    else if (action === 'getTrackingSjData') {
+      result = getTrackingSjData();
+    }
+    else if (action === 'updateStatusSj') {
+      result = updateStatusSj(payload.ids, payload.newStatus);
+    }
+    else if (action === 'saveImportSJ') {
+      result = saveImportSJ(payload.rows);
+    }
+    else if (action === 'saveBbkToSheet') {
+      result = saveBbkToSheet(payload);
+    }
+    else {
+      throw new Error("Action '" + action + "' tidak ditemukan di router backend.");
+    }
+
+    // Kembalikan hasil dari fungsi asli ke frontend
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success', data: result }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    // Jika ada error di backend
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
