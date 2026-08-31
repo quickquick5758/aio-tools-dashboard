@@ -3020,16 +3020,19 @@
             const passInp = document.getElementById('password');
 
             if(!userInp || !passInp) return;
-            const user = userInp.value;
-            const pass = passInp.value;
+            
+            // Tambahan trim() untuk menghapus spasi tidak sengaja di awal/akhir teks
+            const user = userInp.value.trim();
+            const pass = passInp.value.trim();
 
             btn.textContent = 'Memverifikasi...';
             btn.disabled = true;
             if(errorMsg) errorMsg.style.display = 'none';
 
             try {
-                // --- 1. PEMANGGILAN BACKEND VIA FETCH (GITHUB COMPATIBLE) ---
+                console.log("Proses Login via API...");
                 const response = await panggilBackend('verifikasiLogin', {username: user, password: pass});
+                console.log("Respon Server:", response);
 
                 if (response && response.success) {
                     // Sembunyikan Overlay Login
@@ -3049,7 +3052,6 @@
                     const roleSelect = document.getElementById('roleSelect');
                     if(roleSelect) {
                         roleSelect.value = response.role;
-                        // KUNCI: Hanya "Author" yang bisa mengubah pilihan Level/Role di header
                         roleSelect.disabled = ((response.role || "").toLowerCase() !== 'author');
                     }
 
@@ -3057,14 +3059,9 @@
                     const roleLower = (response.role || "").toLowerCase();
                     const privilegedAreaRoles = ['author', 'supervisor', 'ppic']; 
                     
-                    // Daftar semua dropdown Unit yang ada di aplikasi
                     const unitSelects = [
-                        'headerUnitSelect', 
-                        'filter-laporan-unit', 
-                        'filter-sisaom-unit', 
-                        'input-unit', 
-                        'bs-unit', 
-                        'filter-view-unit'
+                        'headerUnitSelect', 'filter-laporan-unit', 'filter-sisaom-unit', 
+                        'input-unit', 'bs-unit', 'filter-view-unit'
                     ];
 
                     const isPrivileged = privilegedAreaRoles.includes(roleLower);
@@ -3072,8 +3069,8 @@
                     unitSelects.forEach(id => {
                         const el = document.getElementById(id);
                         if (el) {
-                            el.value = response.unit || ""; // Set otomatis ke unit asalnya
-                            el.disabled = !isPrivileged;    // KUNCI jika bukan Author/Supervisor/PPIC
+                            el.value = response.unit || "";
+                            el.disabled = !isPrivileged;
                         }
                     });
 
@@ -3083,29 +3080,28 @@
                     const bsKaruSelect = document.getElementById('bs-karu');
 
                     if (isKaru) {
-                        // Kunci dropdown Karu di form input agar hanya nama dia sendiri yang muncul
                         [kSelect, bsKaruSelect].forEach(sel => {
                             if (sel) {
                                 sel.value = response.name;
                                 sel.disabled = true;
                             }
                         });
-                        updateOperatorList(); // Refresh list anak buahnya
+                        try { updateOperatorList(); } catch(e) { console.warn(e); }
                     }
 
-                    // Jalankan fungsi dashboard & akses role
-                    loadDashboardStats();
-                    applyRoleAccess(window.currentUserRole);
+                    // Di-wrap dengan try-catch agar jika UI dashboard gagal muat, login tetap tembus
+                    try { loadDashboardStats(); } catch(e) { console.warn("Dashboard error:", e); }
+                    try { applyRoleAccess(window.currentUserRole); } catch(e) { console.warn("Role error:", e); }
 
                 } else {
-                    // Jika Login Gagal
-                    errorMsg.textContent = response.message || "Username atau Password salah!";
+                    // Jika Login Ditolak Backend
+                    errorMsg.textContent = response ? response.message : "Username atau Password salah!";
                     errorMsg.style.display = 'block';
                 }
             } catch (err) {
-                // Jika Server Google Mati / URL Salah
-                console.error(err);
-                errorMsg.textContent = "Gagal terhubung ke server backend!";
+                // Menampilkan error asli dari sistem agar mudah di debug
+                console.error("Error Login System:", err);
+                errorMsg.innerHTML = "Gagal terhubung ke server!<br><span style='font-size:11px; font-weight:normal;'>" + err.message + "</span>";
                 errorMsg.style.display = 'block';
             } finally {
                 btn.textContent = 'Masuk';
