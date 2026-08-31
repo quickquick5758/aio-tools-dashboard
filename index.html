@@ -1746,7 +1746,7 @@
 
     <script>
         // 1. Masukkan URL Web App /exec Anda di sini
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbx7RttGDmygscGahluOaUHXZLVp5tOBGGabRbIrrYZcmIHBxVbjnhfyuXTR-S395LsUdg/exec"; 
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbz1C10C1bBK-3EvaaR6jupBy6CHoM-wYdqTCQsuCEOPUBwyVHTiZ-s4LydvMv6C4C9JFQ/exec"; 
         
         // 2. Fungsi Pembantu Pengganti google.script.run
         async function panggilBackend(actionName, payloadData) {
@@ -3805,17 +3805,13 @@
             clearForm();
             switchView('input-baru', element);
             // Ambil data saldo 1x saja di background tanpa memblokir form
-            if (typeof google !== 'undefined' && google.script && google.script.run) {
-                google.script.run
-                    .withSuccessHandler(res => {
-                        if (res && res.success) {
-                            window.allMutasiData = res.data || [];
-                            _stokLookupCache.source = null; // Memaksa cache diperbarui dengan data baru
-                            recalculateAllStok();
-                        }
-                    })
-                    .getSaldoMutasiData();
-            }
+            panggilBackend('getSaldoMutasiData', {}).then(res => {
+                if (res && res.success) {
+                    window.allMutasiData = res.data || [];
+                    _stokLookupCache.source = null; // Memaksa cache diperbarui dengan data baru
+                    recalculateAllStok();
+                }
+            }).catch(e => console.error("Gagal getSaldoMutasiData:", e));
         }
 
         // --- LOGIKA FORM INPUT BBK (PENGECEKAN BAHAN BAKU) ---
@@ -4538,14 +4534,13 @@
             }
 
             if (!window.rawViewData || window.rawViewData.length === 0) {
-                if (typeof google !== 'undefined' && google.script && google.script.run) {
-                    google.script.run.withSuccessHandler(data => {
-                        window.rawViewData = data || [];
-                        buildSummaryOperatorsList();
-                    }).getDataProduksi();
-                } else {
+                panggilBackend('getDataProduksi', {}).then(data => {
+                    window.rawViewData = data || [];
                     buildSummaryOperatorsList();
-                }
+                }).catch(e => {
+                    console.error("Gagal getDataProduksi:", e);
+                    buildSummaryOperatorsList();
+                });
             } else {
                 buildSummaryOperatorsList();
             }
@@ -5125,30 +5120,24 @@
                     actionsContainer.innerHTML = '<span style="color:#2b3674; font-weight:bold;">Memproses pembatalan...</span>';
                 }
 
-                if (typeof google !== 'undefined') {
-                    google.script.run
-                        .withSuccessHandler(res => {
-                            if (res && res.success) {
-                                document.getElementById('doc-open-badge').innerHTML = '<span style="background:#fce8e8; color:#ee5d50; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; vertical-align:middle; margin-left:10px;">BATAL</span>';
-                                if(actionsContainer) actionsContainer.style.display = 'none';
-                                
-                                if (window.currentEditingReport) window.currentEditingReport[9] = 'Batal';
-                                loadLaporanData(); 
-                                showDialog("Dokumen berhasil dibatalkan. Saldo telah dikembalikan.", "warning");
-                            } else {
-                                showDialog("Gagal membatalkan dokumen: " + (res ? res.message : "Kesalahan internal"), "warning");
-                                if(actionsContainer) actionsContainer.style.display = 'none';
-                            }
-                        })
-                        .withFailureHandler(err => {
-                            showDialog("Gagal koneksi ke server.", "warning");
+                panggilBackend('updateStatusBatal', { idLaporan: idLaporan })
+                    .then(res => {
+                        if (res && res.success) {
+                            document.getElementById('doc-open-badge').innerHTML = '<span style="background:#fce8e8; color:#ee5d50; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; vertical-align:middle; margin-left:10px;">BATAL</span>';
                             if(actionsContainer) actionsContainer.style.display = 'none';
-                        })
-                        .updateStatusBatal(idLaporan);
-                } else {
-                    document.getElementById('doc-open-badge').innerHTML = '<span style="background:#fce8e8; color:#ee5d50; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; vertical-align:middle; margin-left:10px;">BATAL</span>';
-                    if(actionsContainer) actionsContainer.style.display = 'none';
-                }
+                            
+                            if (window.currentEditingReport) window.currentEditingReport[9] = 'Batal';
+                            loadLaporanData(); 
+                            showDialog("Dokumen berhasil dibatalkan. Saldo telah dikembalikan.", "warning");
+                        } else {
+                            showDialog("Gagal membatalkan dokumen: " + (res ? res.message : "Kesalahan internal"), "warning");
+                            if(actionsContainer) actionsContainer.style.display = 'none';
+                        }
+                    })
+                    .catch(err => {
+                        showDialog("Gagal koneksi ke server.", "warning");
+                        if(actionsContainer) actionsContainer.style.display = 'none';
+                    });
             });
         }
 
@@ -5981,17 +5970,14 @@
             if(!tbody) return;
             tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:20px; color:#8f9bba;">Mengambil data Sisa OM dari server...</td></tr>';
             
-            if (typeof google !== 'undefined') {
-                google.script.run
-                    .withSuccessHandler(function(data) {
-                        window.rawSisaOmData = data || [];
-                        filterSisaOmData();
-                    })
-                    .withFailureHandler(err => {
-                        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#ee5d50;">Gagal memuat data Sisa OM.</td></tr>`;
-                    })
-                    .getSisaOmData();
-            }
+            panggilBackend('getSisaOmData', {})
+                .then(function(data) {
+                    window.rawSisaOmData = data || [];
+                    filterSisaOmData();
+                })
+                .catch(err => {
+                    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#ee5d50;">Gagal memuat data Sisa OM.</td></tr>`;
+                });
         }
 
         function renderSisaOmTable(dataArray, page = 1) {
@@ -6373,22 +6359,23 @@
                         if(validData.length === 0) return showDialog('Tidak ada data valid yang bisa dibaca dari baris excel.', 'warning');
                         
                         showDialog(`Ditemukan ${validData.length} baris Surat Jalan siap di-import. Proses sekarang?`, "confirm", () => {
-                            if (typeof google !== 'undefined') {
-                                const btnRefresh = document.getElementById('btn-refresh-trackingsj');
-                                if(btnRefresh) { btnRefresh.innerHTML = 'Memproses...'; btnRefresh.disabled = true; }
-                                
-                                google.script.run
-                                    .withSuccessHandler(res => {
-                                        if(res.success) {
-                                            alert('Import Berhasil!');
-                                            loadTrackingSj();
-                                        } else {
-                                            showDialog('Gagal Import: ' + res.message, 'warning');
-                                            if(btnRefresh) { btnRefresh.innerHTML = 'Refresh'; btnRefresh.disabled = false; }
-                                        }
-                                    })
-                                    .saveImportSJ(validData);
-                            }
+                            const btnRefresh = document.getElementById('btn-refresh-trackingsj');
+                            if(btnRefresh) { btnRefresh.innerHTML = 'Memproses...'; btnRefresh.disabled = true; }
+                            
+                            panggilBackend('saveImportSJ', { rows: validData })
+                                .then(res => {
+                                    if(res && res.success) {
+                                        alert('Import Berhasil!');
+                                        loadTrackingSj();
+                                    } else {
+                                        showDialog('Gagal Import: ' + (res ? res.message : 'Error Server'), 'warning');
+                                        if(btnRefresh) { btnRefresh.innerHTML = 'Refresh'; btnRefresh.disabled = false; }
+                                    }
+                                })
+                                .catch(err => {
+                                    showDialog('Error koneksi: ' + err.message, 'warning');
+                                    if(btnRefresh) { btnRefresh.innerHTML = 'Refresh'; btnRefresh.disabled = false; }
+                                });
                         });
                     } catch(err) {
                         showDialog("Gagal membaca file Excel. Pastikan format dokumen benar.<br><br>" + err.message, "warning");
@@ -6411,27 +6398,18 @@
                     idsToUpdate.push(cb.value);
                 });
                 
-                if (typeof google !== 'undefined') {
-                    // Update ke server Google Script
-                    google.script.run
-                        .withSuccessHandler(res => {
-                            if(res.success) {
-                                document.getElementById('check-all-sj').checked = false;
-                                loadTrackingSj();
-                            } else {
-                                showDialog("Gagal update status: " + res.message, "warning");
-                            }
-                        })
-                        .updateStatusSj(idsToUpdate, newStatus);
-                } else {
-                    // Fallback Dummy jika local testing
-                    idsToUpdate.forEach(idSj => {
-                        const rowIdx = window.rawTrackingSjData.findIndex(r => r[1] === idSj);
-                        if(rowIdx > -1) window.rawTrackingSjData[rowIdx][6] = newStatus;
+                panggilBackend('updateStatusSj', { ids: idsToUpdate, newStatus: newStatus })
+                    .then(res => {
+                        if(res && res.success) {
+                            document.getElementById('check-all-sj').checked = false;
+                            loadTrackingSj();
+                        } else {
+                            showDialog("Gagal update status: " + (res ? res.message : 'Error'), "warning");
+                        }
+                    })
+                    .catch(err => {
+                        showDialog("Koneksi gagal: " + err.message, "warning");
                     });
-                    filterTrackingSj();
-                    document.getElementById('check-all-sj').checked = false;
-                }
             });
         }
 
@@ -6516,14 +6494,12 @@
 
       function renderPerformaModule() {
           if(!window.rawViewData || window.rawViewData.length === 0) {
-              if (typeof google !== 'undefined') {
-                  google.script.run.withSuccessHandler(data => {
-                      window.rawViewData = data || [];
-                      processPerformaData();
-                  }).getDataProduksi();
-              } else {
-                  showDialog("Data detail belum tersedia.", "warning");
-              }
+              panggilBackend('getDataProduksi', {}).then(data => {
+                  window.rawViewData = data || [];
+                  processPerformaData();
+              }).catch(err => {
+                  showDialog("Data detail gagal dimuat: " + err.message, "warning");
+              });
           } else {
               processPerformaData();
           }
