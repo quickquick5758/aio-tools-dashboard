@@ -1746,7 +1746,7 @@
 
     <script>
         // 1. Masukkan URL Web App /exec Anda di sini
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbyFsdC0l2YN7iwyLPx705xMXoLt4KnYl4-sqHTt2wLz0EZwQMQBHMux2oSLKPOaXblH/exec"; 
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzUC0xww_SGeLkSkOuT-K0Qr8ekQtuNGAnwMxp-KJHkK8dyg9UYl9fFfI-lhW8EIoQn/exec"; 
         
         // 2. Fungsi Pembantu Pengganti google.script.run
         async function panggilBackend(actionName, payloadData) {
@@ -1907,64 +1907,51 @@
 
             // --- Pemanggilan Data Master dari Backend (Fetch API) ---
             
-            // 1. Muat Data Operator
-            try {
-                let data = await panggilBackend('getMasterOperatorData', {});
-                if (!data) data = [];
-                allOperators = data;
-                const karus = [...new Set(data.map(i => i.karu))];
-                const peks = [...new Set(data.map(i => i.pekerjaan))];
-                const kSelect = document.getElementById('select-karu');
-                const bsKaruSelect = document.getElementById('bs-karu');
-                const pSelect = document.getElementById('select-pek');
-                
-                karus.forEach(k => {
-                    if(k) {
-                        if(kSelect) kSelect.innerHTML += `<option value="${k}">${k}</option>`;
-                        if(bsKaruSelect) bsKaruSelect.innerHTML += `<option value="${k}">${k}</option>`;
-                    }
-                });
-                peks.forEach(p => {
-                    if(p && pSelect) pSelect.innerHTML += `<option value="${p}">${p}</option>`;
-                });
-                
-                // Render kartu operator di halaman performa jika data master sudah siap
-                if(typeof renderPerformaOperatorTiles === 'function') renderPerformaOperatorTiles();
-            } catch (err) {
-                console.error("Gagal memuat operator:", err);
-            }
+            / 1. Muat Data Operator
+          try {
+              let data = await panggilBackend('getMasterOperatorData', {});
+              allOperators = data || [];
+              const karus = [...new Set(allOperators.map(i => i.karu))];
+              const peks = [...new Set(allOperators.map(i => i.pekerjaan))];
+              const kSelect = document.getElementById('select-karu');
+              const bsKaruSelect = document.getElementById('bs-karu');
+              const pSelect = document.getElementById('select-pek');
+              
+              karus.forEach(k => {
+                  if(k) {
+                      if(kSelect) kSelect.innerHTML += `<option value="${k}">${k}</option>`;
+                      if(bsKaruSelect) bsKaruSelect.innerHTML += `<option value="${k}">${k}</option>`;
+                  }
+              });
+              peks.forEach(p => {
+                  if(p && pSelect) pSelect.innerHTML += `<option value="${p}">${p}</option>`;
+              });
+              if(typeof renderPerformaOperatorTiles === 'function') renderPerformaOperatorTiles();
+          } catch (err) { console.error("Gagal muat operator:", err); }
 
             // 2. Muat Master Barang
-            try {
-                let res = await panggilBackend('getMasterBarangData', {});
-                if(res && res.success) {
-                    window.allMasterBarang = res.data;
-                } else {
-                    window.allMasterBarang = [];
-                }
-            } catch (err) {
-                console.error("Gagal memuat master barang:", err);
+          try {
+              let res = await panggilBackend('getMasterBarangData', {});
+              window.allMasterBarang = (res && res.success) ? res.data : [];
+          } catch (err) { console.error("Gagal muat master barang:", err);
                 window.allMasterBarang = [];
             }
 
             // 3. Muat Saldo Mutasi
-            try {
-                let res = await panggilBackend('getSaldoMutasiData', {});
-                window.allMutasiData = (res && res.success) ? res.data : [];
-            } catch (err) {
-                console.error("Gagal memuat saldo mutasi:", err);
-                window.allMutasiData = [];
+          try {
+              let res = await panggilBackend('getSaldoMutasiData', {});
+              window.allMutasiData = (res && res.success) ? res.data : [];
+          } catch (err) { console.error("Gagal muat saldo mutasi:", err);
+                      window.allMutasiData = [];
             }
 
         });
 
+            // Set Default Filter Tanggal
             const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const firstDay = `${year}-${month}-01`;
-            const today = `${year}-${month}-${day}`;
-
+            const today = now.toISOString().slice(0, 10);
+            const firstDay = today.slice(0, 8) + '01';
+            
             if(document.getElementById('filter-laporan-start')) document.getElementById('filter-laporan-start').value = firstDay;
             if(document.getElementById('filter-laporan-end')) document.getElementById('filter-laporan-end').value = today;
             if(document.getElementById('filter-view-start')) document.getElementById('filter-view-start').value = firstDay;
@@ -3029,221 +3016,100 @@
             
             const btn = document.querySelector('.login-btn');
             const errorMsg = document.getElementById('login-error');
-            
+            const userInp = document.getElementById('username');
+            const passInp = document.getElementById('password');
+
+            if(!userInp || !passInp) return;
+            const user = userInp.value;
+            const pass = passInp.value;
+
+            btn.textContent = 'Memverifikasi...';
+            btn.disabled = true;
+            if(errorMsg) errorMsg.style.display = 'none';
+
             try {
-                const userInp = document.getElementById('username');
-                const passInp = document.getElementById('password');
+                // --- 1. PEMANGGILAN BACKEND VIA FETCH (GITHUB COMPATIBLE) ---
+                const response = await panggilBackend('verifikasiLogin', {username: user, password: pass});
 
-                if(!userInp || !passInp) return;
-                const user = userInp.value;
-                const pass = passInp.value;
+                if (response && response.success) {
+                    // Sembunyikan Overlay Login
+                    document.getElementById('loginOverlay').style.display = 'none'; 
 
-                if(btn) {
-                    btn.textContent = 'Memverifikasi...';
-                    btn.disabled = true;
-                    btn.style.opacity = '0.7';
-                }
-                if(errorMsg) errorMsg.style.display = 'none';
+                    // Simpan Data User ke Global Variable
+                    window.currentUserRole = response.role || "Operator";
+                    window.currentUserUnit = response.unit || "";
+                    window.currentUserName = response.name || user;
 
-                if (typeof google === 'undefined' || !google.script || !google.script.run) {
-                    setTimeout(() => {
-                        if(btn) {
-                            btn.textContent = 'Masuk';
-                            btn.disabled = false;
-                            btn.style.opacity = '1';
+                    // Update UI Profile (Nama, Role, Foto)
+                    document.querySelector('.profile-name').textContent = response.name || user;
+                    document.querySelector('.profile-role').textContent = `${response.role || "-"} | ${response.unit || "-"}`;
+                    document.getElementById('profileImage').src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(response.name || user) + "&background=4318ff&color=fff&rounded=true";
+
+                    // --- 2. LOGIKA OTORITAS ROLE SELECT ---
+                    const roleSelect = document.getElementById('roleSelect');
+                    if(roleSelect) {
+                        roleSelect.value = response.role;
+                        // KUNCI: Hanya "Author" yang bisa mengubah pilihan Level/Role di header
+                        roleSelect.disabled = ((response.role || "").toLowerCase() !== 'author');
+                    }
+
+                    // --- 3. LOGIKA OTORITAS AREA KERJA (PENGUNCIAN UNIT) ---
+                    const roleLower = (response.role || "").toLowerCase();
+                    const privilegedAreaRoles = ['author', 'supervisor', 'ppic']; 
+                    
+                    // Daftar semua dropdown Unit yang ada di aplikasi
+                    const unitSelects = [
+                        'headerUnitSelect', 
+                        'filter-laporan-unit', 
+                        'filter-sisaom-unit', 
+                        'input-unit', 
+                        'bs-unit', 
+                        'filter-view-unit'
+                    ];
+
+                    const isPrivileged = privilegedAreaRoles.includes(roleLower);
+
+                    unitSelects.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.value = response.unit || ""; // Set otomatis ke unit asalnya
+                            el.disabled = !isPrivileged;    // KUNCI jika bukan Author/Supervisor/PPIC
                         }
-                        const loginOverlay = document.getElementById('loginOverlay');
-                        if(loginOverlay) {
-                            loginOverlay.classList.add('hidden');
-                            loginOverlay.style.display = 'none'; 
-                        }
+                    });
 
-                        window.currentUserRole = "Author";
-                        window.currentUserUnit = "CV JHB 1";
-                        
-                        loadDashboardStats();
+                    // --- 4. LOGIKA KHUSUS KARU ---
+                    const isKaru = (roleLower === 'karu');
+                    const kSelect = document.getElementById('select-karu');
+                    const bsKaruSelect = document.getElementById('bs-karu');
 
-                        const profileNameEl = document.querySelector('.profile-name');
-                        const profileRoleEl = document.querySelector('.profile-role');
-                        if(profileNameEl) profileNameEl.textContent = user;
-                        if(profileRoleEl) profileRoleEl.textContent = `Author | -`;
-                        
-                        const profileImg = document.getElementById('profileImage');
-                                if(profileImg) profileImg.src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(user) + "&background=4318ff&color=fff&rounded=true";
-
-                                applyRoleAccess(window.currentUserRole);
-                            }, 500);
-                            return;
-                        }
-
-                        google.script.run
-                            .withSuccessHandler(function(rawResponse) {
-                                if(btn) {
-                                    btn.textContent = 'Masuk';
-                                    btn.disabled = false;
-                                    btn.style.opacity = '1';
-                                }
-
-                                let response = rawResponse;
-                                if (typeof rawResponse === 'string') {
-                                    try { response = JSON.parse(rawResponse); } catch(e) {}
-                                }
-
-                                if (response && (response === true || response.success === true || response.success === "true")) {
-                                    const loginOverlay = document.getElementById('loginOverlay');
-                                    if(loginOverlay) {
-                                        loginOverlay.classList.add('hidden');
-                                        loginOverlay.style.display = 'none'; 
-                                    }
-
-                                    window.currentUserRole = response.role || "Operator";
-                                    window.currentUserUnit = response.unit || "";
-                                    window.currentUserName = response.name || user;
-
-                                    const profileNameEl = document.querySelector('.profile-name');
-                                    const profileRoleEl = document.querySelector('.profile-role');
-                                    if(profileNameEl) profileNameEl.textContent = response.name || user;
-                                    if(profileRoleEl) profileRoleEl.textContent = `${response.role || "-"} | ${response.unit || "-"}`;
-                                    
-                                    const encodedName = encodeURIComponent(response.name || user);
-                                    const profileImg = document.getElementById('profileImage');
-                                    if(profileImg) profileImg.src = "https://ui-avatars.com/api/?name=" + encodedName + "&background=4318ff&color=fff&rounded=true";
-
-                                    // Trigger load data dashboard (Statistik Produksi)
-                                    loadDashboardStats();
-
-                                    const roleSelect = document.getElementById('roleSelect');
-                                    if(roleSelect) {
-                                        let optionExists = false;
-                                        for(let i = 0; i < roleSelect.options.length; i++) {
-                                            if(roleSelect.options[i].value.toLowerCase() === (response.role || "").toLowerCase()) {
-                                                optionExists = true;
-                                                roleSelect.selectedIndex = i;
-                                                break;
-                                            }
-                                        }
-                                        if(!optionExists && response.role) {
-                                            const newOpt = document.createElement('option');
-                                            newOpt.text = response.role;
-                                            newOpt.value = response.role;
-                                            roleSelect.add(newOpt);
-                                            roleSelect.value = response.role;
-                                        }
-                                        
-                                        // 1. KUNCI LEVEL: Hanya "Author" yang bisa mengubah Level Role
-                                        roleSelect.disabled = ((response.role || "").toLowerCase() !== 'author');
-                                    }
-
-                            const roleLower = (response.role || "").toLowerCase();
-                            
-                            // 2. KUNCI AREA KERJA: Hanya "Author", "Supervisor", dan "PPIC" yang bisa mengubah Area/Unit
-                            const privilegedAreaRoles = ['author', 'supervisor', 'ppic']; 
-                            const headerUnitSelect = document.getElementById('headerUnitSelect');
-                            const filterLaporanUnit = document.getElementById('filter-laporan-unit');
-                            const filterSisaOmUnit = document.getElementById('filter-sisaom-unit');
-                            const inputUnitSelect = document.getElementById('input-unit');
-                            const bsUnitSelect = document.getElementById('bs-unit');
-                            const filterViewUnit = document.getElementById('filter-view-unit');
-
-                            if (!privilegedAreaRoles.includes(roleLower)) {
-                                // Jika BUKAN Author, Supervisor, atau PPIC -> Kunci pada area asalnya
-                                if (headerUnitSelect) { headerUnitSelect.value = response.unit || ""; headerUnitSelect.disabled = true; }
-                                if (filterLaporanUnit) { filterLaporanUnit.value = response.unit || ""; filterLaporanUnit.disabled = true; }
-                                if (filterSisaOmUnit) { filterSisaOmUnit.value = response.unit || ""; filterSisaOmUnit.disabled = true; }
-                                if (inputUnitSelect) { inputUnitSelect.value = response.unit || ""; inputUnitSelect.disabled = true; }
-                                if (bsUnitSelect) { bsUnitSelect.value = response.unit || ""; bsUnitSelect.disabled = true; }
-                                if (filterViewUnit) { filterViewUnit.value = response.unit || ""; filterViewUnit.disabled = true; }
-                            } else {
-                                // Jika Author, Supervisor, atau PPIC -> Bebas pilih area
-                                if (headerUnitSelect) headerUnitSelect.disabled = false;
-                                if (filterLaporanUnit) filterLaporanUnit.disabled = false;
-                                if (filterSisaOmUnit) filterSisaOmUnit.disabled = false;
-                                if (inputUnitSelect) inputUnitSelect.disabled = false;
-                                if (bsUnitSelect) bsUnitSelect.disabled = false;
-                                if (filterViewUnit) filterViewUnit.disabled = false;
+                    if (isKaru) {
+                        // Kunci dropdown Karu di form input agar hanya nama dia sendiri yang muncul
+                        [kSelect, bsKaruSelect].forEach(sel => {
+                            if (sel) {
+                                sel.value = response.name;
+                                sel.disabled = true;
                             }
+                        });
+                        updateOperatorList(); // Refresh list anak buahnya
+                    }
 
-                            const isKaru = (roleLower === 'karu');
-                            const kSelect = document.getElementById('select-karu');
-                            const bsKaruSelect = document.getElementById('bs-karu');
+                    // Jalankan fungsi dashboard & akses role
+                    loadDashboardStats();
+                    applyRoleAccess(window.currentUserRole);
 
-                            if (isKaru) {
-                                if (kSelect && response.name) {
-                                    let foundKaru = false;
-                                    for (let i = 0; i < kSelect.options.length; i++) {
-                                        if (kSelect.options[i].value === response.name) {
-                                            foundKaru = true;
-                                            break;
-                                        }
-                                    }
-                                    if (!foundKaru) {
-                                        const opt = document.createElement('option');
-                                        opt.value = response.name;
-                                        opt.textContent = response.name;
-                                        kSelect.appendChild(opt);
-                                    }
-                                    kSelect.value = response.name;
-                                    kSelect.disabled = true;
-                                }
-                                if (bsKaruSelect && response.name) {
-                                    let foundBsKaru = false;
-                                    for (let i = 0; i < bsKaruSelect.options.length; i++) {
-                                        if (bsKaruSelect.options[i].value === response.name) {
-                                            foundBsKaru = true;
-                                            break;
-                                        }
-                                    }
-                                    if (!foundBsKaru) {
-                                        const opt = document.createElement('option');
-                                        opt.value = response.name;
-                                        opt.textContent = response.name;
-                                        bsKaruSelect.appendChild(opt);
-                                    }
-                                    bsKaruSelect.value = response.name;
-                                    bsKaruSelect.disabled = true;
-                                }
-                                updateOperatorList();
-                            } else {
-                                if (kSelect) { kSelect.disabled = false; kSelect.value = ""; }
-                                if (bsKaruSelect) { bsKaruSelect.disabled = false; bsKaruSelect.value = ""; }
-                            }
-
-                            applyRoleAccess(window.currentUserRole);
-
-                        } else {
-                            if(errorMsg) {
-                                let errMsg = "Gagal masuk, periksa kembali username/password.";
-                                if (response && response.message) errMsg = response.message;
-                                else if (typeof response === 'string' && response.trim() !== '') errMsg = response;
-                                
-                                errorMsg.textContent = errMsg;
-                                errorMsg.style.display = 'block';
-                            }
-                        }
-                    })
-                    .withFailureHandler(function(error) {
-                        if(btn) {
-                            btn.textContent = 'Masuk';
-                            btn.disabled = false;
-                            btn.style.opacity = '1';
-                        }
-                        if(errorMsg) {
-                            errorMsg.textContent = "Gagal terhubung ke sistem server Apps Script.";
-                            errorMsg.style.display = 'block';
-                            console.error(error);
-                        }
-                    })
-                    .verifikasiLogin(user, pass);
-            } catch (err) {
-                if(btn) {
-                    btn.textContent = 'Masuk';
-                    btn.disabled = false;
-                    btn.style.opacity = '1';
-                }
-                if(errorMsg) {
-                    errorMsg.textContent = "Terjadi kesalahan internal JS: " + err.message;
+                } else {
+                    // Jika Login Gagal
+                    errorMsg.textContent = response.message || "Username atau Password salah!";
                     errorMsg.style.display = 'block';
                 }
+            } catch (err) {
+                // Jika Server Google Mati / URL Salah
+                console.error(err);
+                errorMsg.textContent = "Gagal terhubung ke server backend!";
+                errorMsg.style.display = 'block';
+            } finally {
+                btn.textContent = 'Masuk';
+                btn.disabled = false;
             }
         }
 
@@ -4165,33 +4031,22 @@
             
             if(modalAnim) modalAnim.style.display = 'flex';
 
-            if (typeof google !== 'undefined' && google.script && google.script.run) {
-                google.script.run
-                    .withSuccessHandler(res => {
-                        if(res && res.success) {
-                            // 2. Ubah ke Status Sukses setelah server selesai
-                            if(loaderContainer) loaderContainer.style.display = 'none';
-                            if(checkContainer) checkContainer.style.display = 'flex';
-                            if(titleText) titleText.textContent = "Data BBK Disimpan!";
-                            if(descText) descText.innerHTML = "Hasil pengecekan bahan baku berhasil dicatat.";
-                            
-                            // Tampilkan ID yang berhasil digenerate dan munculkan tombol OK
-                            if(docNumEl) docNumEl.textContent = res.idLaporan || "-";
-                            if(btnOk) btnOk.style.display = 'block';
-                            
-                            // Muat ulang data BBK di background
-                            loadBbkGlobalData();
-                        } else {
-                            if(modalAnim) modalAnim.style.display = 'none';
-                            showDialog("Gagal simpan BBK: " + (res ? res.message : "Error server"), "warning");
-                        }
-                    })
-                    .withFailureHandler(err => {
-                        if(modalAnim) modalAnim.style.display = 'none';
-                        showDialog("Koneksi gagal saat menyimpan data.", "warning");
-                    })
-                    .saveBbkToSheet(payload);
-            }
+              try {
+                  const res = await panggilBackend('saveBbkToSheet', payload);
+                  if(res && res.success) {
+                      if(loaderContainer) loaderContainer.style.display = 'none';
+                      if(checkContainer) checkContainer.style.display = 'flex';
+                      titleText.textContent = "Data BBK Disimpan!";
+                      docNumEl.textContent = res.idLaporan || "-";
+                      btnOk.style.display = 'block';
+                      loadBbkGlobalData();
+                  } else {
+                      throw new Error(res.message);
+                  }
+              } catch (err) {
+                  modalAnim.style.display = 'none';
+                  showDialog("Gagal: " + err.message, "warning");
+              }
         }
 
         function toggleSubmenu(element) {
@@ -5987,15 +5842,14 @@
             });
         }
 
-        function refreshSaldoBackground() {
-            if (typeof google !== 'undefined') {
-                google.script.run.withSuccessHandler(res => {
-                    if (res && res.success) {
-                        window.allMutasiData = res.data;
-                        recalculateAllStok();
-                    }
-                }).getSaldoMutasiData();
-            }
+        async function refreshSaldoBackground() {
+            try {
+                const res = await panggilBackend('getSaldoMutasiData', {});
+                if (res && res.success) {
+                    window.allMutasiData = res.data;
+                    recalculateAllStok();
+                }
+            } catch (e) { console.error(e); }
         }
 
         function refreshAllQtyStokDisplay() {
@@ -6225,63 +6079,41 @@
 
         // --- TRACKING SJ FUNCTIONS --- //
         function loadTrackingSj() {
-            const tbody = document.getElementById('tbody-tracking-sj');
-            const btnRefresh = document.getElementById('btn-refresh-trackingsj');
-            if(tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:#8f9bba;">Memuat data SJ dari server...</td></tr>';
-            if(btnRefresh) { btnRefresh.innerHTML = 'Memuat...'; btnRefresh.disabled = true; }
+                    const tbody = document.getElementById('tbody-tracking-sj');
+                    const btnRefresh = document.getElementById('btn-refresh-trackingsj');
+                    if(tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:#8f9bba;">Memuat data SJ dari server...</td></tr>';
+                    if(btnRefresh) { btnRefresh.innerHTML = 'Memuat...'; btnRefresh.disabled = true; }
 
-            // Menyesuaikan tombol aksi berdasarkan Role / Level Akses
-            const roleLower = (window.currentUserRole || "").toLowerCase();
-            const btnKirim = document.getElementById('btn-sj-kirim-finance');
-            const btnTerima = document.getElementById('btn-sj-terima-finance');
-            const btnKembali = document.getElementById('btn-sj-kembali-unit');
-            const btnReset = document.getElementById('btn-sj-reset');
+                    // Menyesuaikan tombol aksi berdasarkan Role / Level Akses
+                    const roleLower = (window.currentUserRole || "").toLowerCase();
+                    const btnKirim = document.getElementById('btn-sj-kirim-finance');
+                    const btnTerima = document.getElementById('btn-sj-terima-finance');
+                    const btnKembali = document.getElementById('btn-sj-kembali-unit');
+                    const btnReset = document.getElementById('btn-sj-reset');
 
-            if(btnKirim) btnKirim.style.display = 'none';
-            if(btnTerima) btnTerima.style.display = 'none';
-            if(btnKembali) btnKembali.style.display = 'none';
-            if(btnReset) btnReset.style.display = 'none';
+                    if(btnKirim) btnKirim.style.display = 'none';
+                    if(btnTerima) btnTerima.style.display = 'none';
+                    if(btnKembali) btnKembali.style.display = 'none';
+                    if(btnReset) btnReset.style.display = 'none';
 
-            if (roleLower === 'author' || roleLower === 'supervisor') {
-                if(btnKirim) btnKirim.style.display = 'inline-block';
-                if(btnTerima) btnTerima.style.display = 'inline-block';
-                if(btnKembali) btnKembali.style.display = 'inline-block';
-                if(btnReset) btnReset.style.display = 'inline-block';
-            } else if (roleLower === 'admin produksi' || roleLower === 'staff produksi') {
-                if(btnKirim) btnKirim.style.display = 'inline-block';
-            } else if (roleLower === 'admin finance' || roleLower === 'staff finance') {
-                if(btnTerima) btnTerima.style.display = 'inline-block';
-                if(btnKembali) btnKembali.style.display = 'inline-block';
-            }
+                    if (roleLower === 'author' || roleLower === 'supervisor') {
+                        if(btnKirim) btnKirim.style.display = 'inline-block';
+                        if(btnTerima) btnTerima.style.display = 'inline-block';
+                        if(btnKembali) btnKembali.style.display = 'inline-block';
+                        if(btnReset) btnReset.style.display = 'inline-block';
+                    } else if (roleLower === 'admin produksi' || roleLower === 'staff produksi') {
+                        if(btnKirim) btnKirim.style.display = 'inline-block';
+                    } else if (roleLower === 'admin finance' || roleLower === 'staff finance') {
+                        if(btnTerima) btnTerima.style.display = 'inline-block';
+                        if(btnKembali) btnKembali.style.display = 'inline-block';
+                    }
 
-            if (typeof google !== 'undefined') {
-                google.script.run
-                    .withSuccessHandler(function(data) {
-                        if(btnRefresh) { btnRefresh.innerHTML = 'Refresh'; btnRefresh.disabled = false; }
-                        
-                        window.rawTrackingSjData = (data || []).map(row => {
-                            // Data Backend sudah fix 8 Index (0 s/d 7)
-                            // 0:Unit, 1:No SJ, 2:Tgl SJ, 3:Tgl Kirim, 4:Tgl Diterima, 5:Pelanggan, 6:Status, 7:SLA
-                            return [row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]];
-                        }).reverse();
-
-                        // Mengisi dropdown Filter Supplier Otomatis (Index 5 = Pelanggan)
-                        const suppliers = [...new Set(window.rawTrackingSjData.map(r => r[5]).filter(Boolean))].sort();
-                        const supSelect = document.getElementById('filter-trackingsj-supplier');
-                        if(supSelect) {
-                            supSelect.innerHTML = '<option value="">Semua Supplier</option>';
-                            suppliers.forEach(s => {
-                                supSelect.innerHTML += `<option value="${s}">${s}</option>`;
-                            });
-                        }
-
-                        filterTrackingSj();
-                    })
-                    .withFailureHandler(function(err) {
-                        if(btnRefresh) { btnRefresh.innerHTML = 'Coba Lagi'; btnRefresh.disabled = false; }
-                        if(tbody) tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#ee5d50;">Gagal memuat data: Koneksi terputus.</td></tr>`;
-                    })
-                    .getTrackingSjData();
+                    try {
+                const data = await panggilBackend('getTrackingSjData', {});
+                window.rawTrackingSjData = (data || []).reverse();
+                filterTrackingSj();
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="9">Gagal muat data</td></tr>`;
             }
         }
 
