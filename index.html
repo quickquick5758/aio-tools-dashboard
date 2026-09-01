@@ -1746,30 +1746,41 @@
 
     <script>
         // 1. Masukkan URL Web App /exec Anda di sini
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbw2V5sjY3eDIK02edky-VXqsY5DSKjcky5-zXKlsraR0ht_ClJVscZiz25l74IxNwbpBw/exec"; 
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbz1C10C1bBK-3EvaaR6jupBy6CHoM-wYdqTCQsuCEOPUBwyVHTiZ-s4LydvMv6C4C9JFQ/exec"; 
         
-        // 2. Fungsi Pembantu Pengganti google.script.run
+        // 2. Fungsi Pembantu Pengganti google.script.run (DIPERKUAT ANTI-CRASH)
         async function panggilBackend(actionName, payloadData) {
           try {
+            console.log(`📡 Memanggil fungsi: ${actionName}...`);
             let response = await fetch(GAS_URL, {
               method: "POST",
               redirect: "follow",
-              headers: { "Content-Type": "text/plain;charset=utf-8" },
+              // Penting: Gunakan text/plain agar Google tidak memblokir (CORS)
+              headers: { "Content-Type": "text/plain;charset=utf-8" }, 
               body: JSON.stringify({ 
                 action: actionName, 
                 payload: payloadData 
               })
             });
             
-            let result = await response.json();
+            // Jangan langsung di-JSON, baca raw text-nya dulu
+            let responseText = await response.text();
+            
+            // Cek apakah balasan dari Google berupa Halaman HTML Error (Deployment salah)
+            if (responseText.includes("<!DOCTYPE html>") || responseText.includes("<html")) {
+               console.error("🛑 BLOKIR GOOGLE SCRIPT: Server mengembalikan HTML, bukan data.", responseText);
+               throw new Error("Koneksi ditolak Google. Pastikan Akses Deployment diset 'Anyone' (Siapa Saja).");
+            }
+            
+            let result = JSON.parse(responseText); // Parse secara aman
             
             if (result.status === 'success') {
-              return result.data; // Mengembalikan data persis seperti google.script.run
+              return result.data; 
             } else {
               throw new Error(result.message);
             }
           } catch (error) {
-            console.error("Gagal memanggil backend:", error);
+            console.error("💥 ERROR BACKEND:", error.message);
             throw error;
           }
         }
