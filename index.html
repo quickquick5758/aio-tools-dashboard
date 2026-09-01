@@ -1745,42 +1745,41 @@
     </div>
 
     <script>
-        // 1. Masukkan URL Web App /exec Anda di sini
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbz1C10C1bBK-3EvaaR6jupBy6CHoM-wYdqTCQsuCEOPUBwyVHTiZ-s4LydvMv6C4C9JFQ/exec"; 
+        // 1. MASUKKAN URL TERBARU HASIL DEPLOY LANGKAH 1 KE DALAM TANDA KUTIP DI BAWAH INI:
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbw2V5sjY3eDIK02edky-VXqsY5DSKjcky5-zXKlsraR0ht_ClJVscZiz25l74IxNwbpBw/exec"; 
         
-        // 2. Fungsi Pembantu Pengganti google.script.run (DIPERKUAT ANTI-CRASH)
+        // 2. Mesin Panggil Backend Tahan Banting (Anti-CORS & Anti-Crash)
         async function panggilBackend(actionName, payloadData) {
           try {
-            console.log(`📡 Memanggil fungsi: ${actionName}...`);
-            let response = await fetch(GAS_URL, {
+            console.log(`📡 Sedang menghubungi server untuk: ${actionName}...`);
+            
+            const response = await fetch(GAS_URL, {
               method: "POST",
-              redirect: "follow",
-              // Penting: Gunakan text/plain agar Google tidak memblokir (CORS)
-              headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+              // Kita lepas headers sepenuhnya. Biarkan browser otomatis memakai default 
+              // agar Google Script tidak salah paham dan memblokir dengan CORS "Preflight"
               body: JSON.stringify({ 
                 action: actionName, 
                 payload: payloadData 
               })
             });
             
-            // Jangan langsung di-JSON, baca raw text-nya dulu
-            let responseText = await response.text();
+            const responseText = await response.text();
             
-            // Cek apakah balasan dari Google berupa Halaman HTML Error (Deployment salah)
-            if (responseText.includes("<!DOCTYPE html>") || responseText.includes("<html")) {
-               console.error("🛑 BLOKIR GOOGLE SCRIPT: Server mengembalikan HTML, bukan data.", responseText);
-               throw new Error("Koneksi ditolak Google. Pastikan Akses Deployment diset 'Anyone' (Siapa Saja).");
+            // Tangkap jika yang dikembalikan adalah error peringatan HTML dari Google
+            if (responseText.trim().startsWith("<")) {
+               console.error("🛑 Server memblokir! Mengembalikan kode HTML:", responseText.substring(0, 50) + "...");
+               throw new Error("Izin ditolak server. Pastikan Akses diubah menjadi 'Anyone' (Siapa saja).");
             }
             
-            let result = JSON.parse(responseText); // Parse secara aman
+            const result = JSON.parse(responseText);
             
             if (result.status === 'success') {
               return result.data; 
             } else {
-              throw new Error(result.message);
+              throw new Error(result.message || "Terdapat masalah internal pada server Google.");
             }
           } catch (error) {
-            console.error("💥 ERROR BACKEND:", error.message);
+            console.error(`💥 Gagal di ${actionName}:`, error);
             throw error;
           }
         }
