@@ -1907,7 +1907,7 @@
 
             // --- Pemanggilan Data Master dari Backend (Fetch API) ---
             
-            / 1. Muat Data Operator
+            // 1. Muat Data Operator
           try {
               let data = await panggilBackend('getMasterOperatorData', {});
               allOperators = data || [];
@@ -1942,13 +1942,13 @@
               let res = await panggilBackend('getSaldoMutasiData', {});
               window.allMutasiData = (res && res.success) ? res.data : [];
           } catch (err) { console.error("Gagal muat saldo mutasi:", err);
-                      window.allMutasiData = [];
-            }
-
-        });
+              window.allMutasiData = [];
+          }
 
             // Set Default Filter Tanggal
             const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
             const today = now.toISOString().slice(0, 10);
             const firstDay = today.slice(0, 8) + '01';
             
@@ -1961,7 +1961,8 @@
             if(document.getElementById('filter-trackingsj-start')) document.getElementById('filter-trackingsj-start').value = firstDay;
             if(document.getElementById('filter-trackingsj-end')) document.getElementById('filter-trackingsj-end').value = today;
             if(document.getElementById('filter-sisaom-month')) document.getElementById('filter-sisaom-month').value = `${year}-${month}`;
-        });
+            
+        }); // Akhir dari DOMContentLoaded
         function togglePasswordVisibility() {
             const passInput = document.getElementById('password');
             const eyeIcon = document.getElementById('eyeIcon');
