@@ -3965,7 +3965,7 @@
             container.style.display = 'block';
         }
 
-        function saveBbkData() {
+        async function saveBbkData() {
             const unit = document.getElementById('bbk-unit').value || window.currentUserUnit;
             const tanggal = document.getElementById('bbk-date').value;
             const pekerjaan = document.getElementById('bbk-pek').value;
@@ -6072,7 +6072,7 @@
         }
 
         // --- TRACKING SJ FUNCTIONS --- //
-        function loadTrackingSj() {
+        async function loadTrackingSj() {
                     const tbody = document.getElementById('tbody-tracking-sj');
                     const btnRefresh = document.getElementById('btn-refresh-trackingsj');
                     if(tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:#8f9bba;">Memuat data SJ dari server...</td></tr>';
