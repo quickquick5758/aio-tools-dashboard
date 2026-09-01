@@ -166,7 +166,7 @@
             z-index: 20;
         }
         .table-thin th, .table-thin td { 
-            padding: 6px 8px; /* Padding diperbesar untuk menggantikan padding container yang dihapus */
+            padding: 4px 6px; /* Padding di perkecil agar tinggi baris menyusut */
             text-align: left; 
             border-bottom: 1px solid #f0f0f0; 
             font-weight: 350; 
@@ -429,44 +429,78 @@
             font-weight: 700;
         }
 
-        /* --- PRE-PRINT / CETAK DOKUMEN STYLES (A4) --- */
+        /* --- PRE-PRINT / CETAK DOKUMEN STYLES (A4) FIX --- */
         @media print {
-            body { background: white !important; margin: 0; padding: 0; display: block; overflow: visible; font-family: 'Arial', sans-serif;}
-            /* Sembunyikan Navigasi yang Tidak Perlu */
-            .sidebar, .header, .footer-ticker, .sidebar-overlay, #doc-header-action-wrapper, #doc-open-actions { display: none !important; }
+            @page { size: A4 portrait; margin: 12mm 15mm; }
+            html, body { height: auto !important; overflow: visible !important; margin: 0 !important; padding: 0 !important; background: white !important; font-family: 'Arial', sans-serif;}
             
-            /* Sesuaikan Box Content agar Pas Kertas */
-            .main-wrapper { padding: 0 !important; width: 100vw !important; height: auto !important; overflow: visible !important; display: block !important; }
-            .content-body { padding: 0 !important; overflow: visible !important; display: block !important; }
-            .input-wrapper { border: none !important; box-shadow: none !important; padding: 0 !important; width: 100% !important; max-height: none !important; height: auto !important; }
-            #doc-open-content { border: none !important; padding: 0 !important; max-height: none !important; overflow: visible !important; height: auto !important; background: white !important;}
+            /* Sembunyikan elemen utama dari UI web (Dihapus sepenuhnya dari perhitungan posisi) */
+            body > *:not(#view-document-open) { display: none !important; }
             
-            @page { size: A4 portrait; margin: 15mm; }
-            
-            /* Konversi Table jadi Bordered Solid (Monokrom Cetak) - Dipaksa Wrap/Pindah Baris */
-            #scroll-wrapper { overflow: visible !important; width: 100% !important; border: none !important; }
-            .table-thin { width: 100% !important; border-collapse: collapse !important; font-size: 10pt !important; color: #000 !important; margin-bottom: 30px !important; table-layout: fixed !important; }
-            .table-thin th, .table-thin td { border: 1px solid #000 !important; color: #000 !important; padding: 6px !important; background-color: transparent !important; box-shadow: none !important; white-space: normal !important; word-wrap: break-word !important; overflow-wrap: break-word !important; }
+            /* Eksekusi penarikan posisi Modal/Popup ke puncak kiri atas tanpa celah margin js */
+            #view-document-open {
+                display: block !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                transform: none !important; /* Menghilangkan efek JS Transform */
+                background: white !important;
+            }
+
+            /* Hancurkan kotak padding popup, jadikan selembar full */
+            #view-document-open .input-wrapper {
+                position: static !important;
+                display: block !important;
+                width: 100% !important;
+                max-width: none !important;
+                min-width: 0 !important;
+                height: auto !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                transform: none !important; /* Menghilangkan Margin Auto HTML Inline */
+            }
+
+            /* Target Laporan Dokumen Aktual */
+            #doc-open-content {
+                display: block !important;
+                position: static !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important; 
+            }
+            #doc-open-content * { visibility: visible !important; }
+
+            /* Konversi Tabel Agar Kokoh Anti-Cut dan Penuh Ke Samping */
+            #scroll-wrapper { overflow: visible !important; width: 100% !important; border: none !important; display: block !important;}
+            .table-thin { width: 100% !important; border-collapse: collapse !important; font-size: 10.5pt !important; color: #000 !important; margin-bottom: 30px !important; table-layout: auto !important; }
+            .table-thin th, .table-thin td { border: 1px solid #000 !important; color: #000 !important; padding: 6px 8px !important; background-color: transparent !important; box-shadow: none !important; white-space: normal !important; word-break: break-word !important;}
             .table-thin th { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-weight: bold !important; text-align: center !important;}
             
-            /* Style Grid Kotak Info */
+            /* Anti Tabel Putus Di Antara Lembar Halaman */
+            table, tr, th, td { page-break-inside: avoid !important; }
+            
+            /* Style Grid Kotak Info Di Atas */
             .info-box-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; }
-            .info-box { border: 1px solid #333 !important; padding: 8px !important; box-shadow: none !important; background: transparent !important; page-break-inside: avoid; }
-            .info-box div:first-child { color: #555 !important; font-size: 9pt !important;}
-            .info-box div:last-child { color: #000 !important; font-size: 12pt !important;}
+            .info-box { border: 1px solid #333 !important; padding: 8px !important; box-shadow: none !important; background: transparent !important; page-break-inside: avoid; border-radius: 0 !important;}
+            .info-box div:first-child { color: #555 !important; font-size: 8pt !important;}
+            .info-box div:last-child { color: #000 !important; font-size: 11pt !important;}
             
             /* Menampilkan Header Perusahaan */
             .print-header { display: block !important; margin-bottom: 25px; text-align: center; border-bottom: 3px double #000; padding-bottom: 10px; }
-            .print-header h1 { font-size: 18pt !important; margin: 0 0 5px 0 !important; color: #000 !important; font-weight: bold;}
+            .print-header h1 { font-size: 18pt !important; margin: 0 0 5px 0 !important; color: #000 !important; font-weight: bold; text-transform: uppercase;}
             
-            /* Teks atau Box yang dilarang tercetak ke PDF */
-            .print-no, .btn-modern, h4, .text-danger, .badge { display: none !important; }
+            /* Style Tanda Tangan */
+            .print-signatures { display: flex !important; justify-content: space-between; margin-top: 40px; padding: 0 10px; font-size: 10pt; text-align: center; color: #000; page-break-inside: avoid; width:100% !important;}
             
-            /* Kolom Tanda Tangan */
-            .print-signatures { display: flex !important; justify-content: space-between; margin-top: 50px; padding: 0 20px; font-size: 10pt; text-align: center; color: #000; page-break-inside: avoid;}
-            .sig-box { width: 30%; }
-            .sig-line { margin-top: 70px; border-top: 1px solid #000; font-weight: bold; }
-            #doc-open-badge { display: none !important; }
+            /* Teks UI web yang harus dimusnahkan ketika dicetak */
+            .print-no, h4, .text-danger, .badge, #doc-header-action-wrapper, #doc-open-actions, #doc-open-badge { display: none !important; }
         }
     </style>
 </head>
@@ -638,7 +672,7 @@
             <div class="header-actions">
                 <div class="select-wrapper">
                     <select class="header-select" id="headerUnitSelect" onchange="filterLaporanData()">
-                        <option value="Semua Unit" selected>Semua Unit</option>
+                        <option value="Semua Unit">Semua Unit</option>
                         <option value="CV JHB 1">CV JHB 1</option>
                         <option value="CV JHB 2">CV JHB 2</option>            
                         <option value="CV JHB 5">CV JHB 5</option>
@@ -1629,11 +1663,14 @@
                                     </div>
                                 </div>
                               
-                                <!-- 9. VIEW DOKUMEN BUKA (MODAL FLOATING DIPERLEBAR) -->
-                                <div id="view-document-open" style="display:none; position:fixed; inset:0; background:transparent; z-index:9999; align-items:center; justify-content:center; padding: 20px;">
-                                    <div class="input-wrapper" style="width: 98vw; max-width: 100%; height: 96vh; background: #fff; border-radius: 2px; display: flex; flex-direction: column; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.15); border: 1px solid #e0e5f2; padding: 25px 30px;">
+                                <!-- 9. VIEW DOKUMEN BUKA (MODAL FLOATING DIPERLEBAR FIT KONTEN) -->
+                                <div id="view-document-open" style="display:none; position:fixed; inset:0; background:transparent; z-index:9999; align-items:flex-start; justify-content:center; padding: 30px 10px; overflow-y:auto;">
+                                    <div class="input-wrapper" style="width: auto; min-width:850px; max-width: 95vw; height: auto; min-height:40vh; max-height: max-content; background: #fff; border-radius: 2px; display: flex; flex-direction: column; position: relative; box-shadow: 0 10px 50px rgba(43,54,116,0.3); border: 1px solid #e0e5f2; padding: 25px 30px; margin:auto;">
                                         <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom: 15px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;">
-                                            <h3 class="text-secondary font-bold" style="font-size:20px; margin:0;">Tinjauan Dokumen <span id="doc-open-badge"></span></h3>
+                                            <div style="display:flex; align-items:center; gap:12px;">
+                                                <h3 class="text-secondary font-bold" style="font-size:20px; margin:0; display:flex; align-items:center;">Tinjauan Dokumen <span id="doc-open-badge"></span></h3>
+                                                <span id="doc-state-status" style="display:none; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:800; color:#fff; box-shadow:0 2px 10px rgba(0,0,0,0.1); letter-spacing: 0.5px;">-</span>
+                                            </div>
                                             <div style="display:flex; gap:8px;" id="doc-header-action-wrapper">
                                                 <button class="btn-modern" style="background:#ee5d50;" onclick="goBackFromDocument()">&times; Tutup</button>
                                             </div>
@@ -1646,18 +1683,7 @@
                                             <button type="button" class="btn-modern" style="background:#fef08a; color:#854d0e; padding:10px 30px; font-weight:800;" onclick="editDokumen()">Edit</button>
                                             <button type="button" id="btn-approve-action" class="btn-modern" style="background:#10b981; color:#fff; padding:10px 30px; font-weight:800;" onclick="alert('Approve')">Approve</button>
                                         </div>
-                                    </div>
-                                    <!-- Menyesuaikan Gaya Kertas Cetakan Untuk Modal -->
-                                    <style>
-                                        @media print {
-                                            body * { visibility: hidden !important; }
-                                            #view-document-open { display: block !important; position: absolute !important; inset: auto !important; background: transparent !important; padding:0 !important; }
-                                            #view-document-open .input-wrapper { box-shadow: none !important; max-width: none !important; height: auto !important; padding:0 !important; }
-                                            #doc-open-content, #doc-open-content * { visibility: visible !important; }
-                                            #doc-open-content { position: absolute; left: 0; top: 0; padding:0 !important; overflow: visible !important; }
-                                            #doc-header-action-wrapper, #doc-open-actions { display: none !important; }
-                                        }
-                                    </style>
+                                    </div>                                    
                                 </div>
                                 
                                 <!-- 10. VIEW TRACKING SJ -->
@@ -2738,29 +2764,29 @@
                         const isAllowedToViewPrice = ALLOWED_ROLES.includes(userRole);
                         const isBS = (window.currentOpenDocType === 'BS');
 
-                        // SETTING HEADERS (Jika BS Format Lebih Simpel)
+                        // SETTING HEADERS (Jika BS Format Lebih Simpel) Terapkan Persentase Lebar!
                         if (isBS) {
                             tableHeaderHtml = `
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2;">No</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2;">Kode - Nama Barang - Motif</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2;">Kategori</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; text-align:center;">Qty</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2;">Keterangan</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:5%;">No</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:55%;">Kode - Nama Barang - Motif</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:20%;">Kategori</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; text-align:center; width:10%;">Qty</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:10%;">Keterangan</th>
                             `;
                         } else {
                             let priceHeaders = isAllowedToViewPrice ? `
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; text-align:right;">Harga (Rp)</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; text-align:right;">Insentif (Rp)</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; text-align:right; width:8%;">Harga (Rp)</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; text-align:right; width:10%;">Insentif (Rp)</th>
                             ` : '';
                             tableHeaderHtml = `
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2;">No</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2;">Kode - Nama Barang</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2;">Kategori</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2;">Supplier</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2;">Motif</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; text-align:center;">Qty</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:3%;">No</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:35%;">Kode - Nama Barang</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:15%;">Kategori</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:15%;">Supplier</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:10%;">Motif</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; text-align:center; width:5%;">Qty</th>
                                 ${priceHeaders}
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2;">Keterangan</th>
+                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:10%;">Keterangan</th>
                             `;
                         }
 
@@ -2864,7 +2890,7 @@
                                     <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px;">${row[2] || '-'} <span style="font-size:11px; font-weight:normal;">(${row[5] || '-'})</span></div>
                                 </div>
                                 <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:2px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
-                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Ketua Regu</div>
+                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Kepala Regu (Karu)</div>
                                     <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px;">${row[4] || '-'}</div>
                                 </div>
                                 ${!isBS ? `
@@ -2873,7 +2899,7 @@
                                     <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px;">${row[6] || '-'}</div>
                                 </div>
                                 <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:2px; box-shadow:0 2px 8px rgba(0,0,0,0.02); grid-column: span 2;">
-                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Operator Penanggung Jawab</div>
+                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Operator</div>
                                     <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px; overflow:hidden; text-overflow:ellipsis;">${row[7] || '-'}</div>
                                 </div>` : ''}
                             </div>
@@ -2909,7 +2935,7 @@
                                 <div class="sig-box">
                                     Disetujui,<br><br><br><br><br>
                                     <div style="border-top:1px solid #000; width:80%; margin:0 auto 4px auto;"></div>
-                                    <span style="font-size:9pt;">(Supervisor / Manajer)</span>
+                                    <span style="font-size:9pt;">(Supplier)</span>
                                 </div>
                             </div>
                             
@@ -3110,9 +3136,19 @@
                     btnOpen.onclick = async () => {
                         document.getElementById('view-document-open').style.display = 'flex'; // Pakai Mode Flex Overlay
                         const idLaporan = row[3];
-                        document.getElementById('doc-open-badge').innerHTML = '<span style="background:#e0e5ff; color:#4318ff; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; vertical-align:middle; margin-left:10px;">CEK BBK FISIK</span>';
+                        document.getElementById('doc-open-badge').innerHTML = ''; // Kosongkan Label biru lamanya agar tak bertabrakan
                         
-                        document.getElementById('doc-open-content').innerHTML = '<div style="text-align:center; padding:30px; font-weight:bold; color:#4318ff;">Mengambil Data Detail BBK...</div>';
+                        const statusPengecekanStr = String(row[10] || '').toUpperCase();
+                        let warnabgBoxStatusBbk = statusPengecekanStr === 'BATAL' ? '#ef4444' : '#0ea5e9'; // Gunakan warna SkyBlue jika BUKAN BATAL (karena bukan ranah PRD)
+
+                        const dynamicStatusDoc = document.getElementById('doc-state-status');
+                        if (dynamicStatusDoc) {
+                            dynamicStatusDoc.style.display = 'inline-block';
+                            dynamicStatusDoc.style.background = warnabgBoxStatusBbk;
+                            dynamicStatusDoc.innerText = 'BBK: ' + statusPengecekanStr;
+                        }
+                        
+                        document.getElementById('doc-open-content').innerHTML = '<div style="text-align:center; padding:30px; font-weight:bold; color:#4318ff;">Mengambil Data...</div>';
 
                         if (!window.rawBbkDetailData || window.rawBbkDetailData.length === 0) {
                              window.rawBbkDetailData = await panggilBackend('getBbkDetailData', {}) || [];
@@ -3202,35 +3238,7 @@
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
-                            <div class="print-signatures" style="display:none;">
-                                <div class="sig-box">
-                                    Dihitung & Diterima Oleh,<br><span style="font-size:9pt;">(Bag. Pengadaan / Gudang)</span>
-                                    <div class="sig-line">NAMA: ${row[4] || '-'}</div>
-                                </div>
-                                <div class="sig-box">
-                                    Diserahkan Oleh,<br><span style="font-size:9pt;">(Sopir / Ekspedisi)</span>
-                                    <div class="sig-line">NAMA : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-                                </div>
-                                <div class="sig-box">
-                                    Mengetahui,<br><span style="font-size:9pt;">(Supervisor / Manager)</span>
-                                    <div class="sig-line">NAMA: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-                                </div>
-                            </div>
-                            <div class="print-signatures" style="display:none;">
-                                <div class="sig-box">
-                                    Dihitung & Diterima Oleh,<br><span style="font-size:9pt;">(Bag. Pengadaan / Gudang)</span>
-                                    <div class="sig-line">NAMA: ${row[4] || '-'}</div>
-                                </div>
-                                <div class="sig-box">
-                                    Diserahkan Oleh,<br><span style="font-size:9pt;">(Sopir / Ekspedisi)</span>
-                                    <div class="sig-line">NAMA : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-                                </div>
-                                <div class="sig-box">
-                                    Mengetahui,<br><span style="font-size:9pt;">(Supervisor / Manager)</span>
-                                    <div class="sig-line">NAMA: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-                                </div>
-                            </div>
+                            </div>                            
                             <div style="margin-top:15px; padding:10px; background:#d1fae5; color:#065f46; border-radius:4px; font-weight:bold; text-align:center; font-size:12px;">Hanya Lihat. Dokumen BBK saat ini tidak dapat diubah setelah di-submit.</div>
                         `;
                         
@@ -5475,12 +5483,18 @@
                         
                         if(modalAnim) modalAnim.style.display = 'flex';
                         
-                        // Ubah Tampilan Badge di Dokumen Buka jadi APPROVED
-                        document.getElementById('doc-open-badge').innerHTML = '<span style="background:#e0e5ff; color:#4318ff; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; vertical-align:middle; margin-left:10px;">APPROVED</span>';
-                        document.getElementById('doc-open-actions').style.display = 'none'; // Sembunyikan Action Edit/Approve
+                        // Mengatur Warna dinamis Badge Status Pada Buka Dokumen Utama
+                        const elStatusState = document.getElementById('doc-state-status');
+                        let stateColorBg = '#8f9bba'; 
+                        if (statusVal === 'approved' || statusVal === 'approve') { stateColorBg = '#10b981'; }
+                        else if (statusVal === 'submitted' || statusVal === 'draft') { stateColorBg = '#f59e0b'; }
+                        else if (statusVal === 'batal') { stateColorBg = '#ef4444'; }
                         
-                        // FIX: Suntikkan Langsung Tombol Cetak PDF & Excel di Wrapper Atas tanpa harus menutup form
-                        const topActions = document.getElementById('doc-header-action-wrapper');
+                        if (elStatusState) {
+                            elStatusState.style.display = 'inline-block';
+                            elStatusState.style.background = stateColorBg;
+                            elStatusState.innerText = (statusVal === 'approve') ? 'APPROVED' : statusVal.toUpperCase();
+                        }
                         if (topActions) {
                             topActions.innerHTML = `
                                 <button class="btn-modern" style="background:#fff; color:#05cd99; border:1px solid #05cd99; padding:6px 12px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 5px rgba(5, 205, 153, 0.1);" onclick="window.print()" title="Print / Simpan PDF">
@@ -5675,6 +5689,67 @@
                 }
                 tbody.appendChild(tr);
             });
+
+            // ADD TOTAL ROW LOGIC HERE FOR VIEW DATA (BERHITUNG OTOMATIS)
+            if (tableStates.view.data.length > 0) {
+                let totalDataQty = 0;
+                let totalDataInsentif = 0;
+
+                tableStates.view.data.forEach(r => {
+                    totalDataQty += parseFloat(r[13]) || 0;
+                    if(canViewPrice) {
+                        let rawIns = String(r[16] || '0').split(',')[0].replace(/[^\d]/g, '');
+                        totalDataInsentif += parseFloat(rawIns) || 0;
+                    }
+                });
+
+                const trTot = document.createElement('tr');
+                trTot.style.backgroundColor = '#f8fafc';
+                
+                const tdTotText = document.createElement('td');
+                tdTotText.colSpan = 13; // Tarik Panjang Kosongkan dari awal hingga sebelum QTY (13 index)
+                tdTotText.style.textAlign = 'right';
+                tdTotText.style.fontWeight = '800';
+                tdTotText.style.color = '#2b3674';
+                tdTotText.style.borderTop = '2px solid #e0e5f2';
+                tdTotText.textContent = 'TOTAL PENJUMLAHAN DATA FILTER :';
+                trTot.appendChild(tdTotText);
+
+                const tdTotQty = document.createElement('td'); // Isi Ke Kolom QTY (Index 14)
+                tdTotQty.style.textAlign = 'right';
+                tdTotQty.style.fontWeight = '900';
+                tdTotQty.style.color = '#4318ff';
+                tdTotQty.style.fontSize = '14px';
+                tdTotQty.style.borderTop = '2px solid #e0e5f2';
+                tdTotQty.textContent = Number(totalDataQty).toLocaleString('id-ID');
+                trTot.appendChild(tdTotQty);
+
+                const tdTotBlank = document.createElement('td'); // Kolom Keterangan Dikosongi
+                tdTotBlank.style.borderTop = '2px solid #e0e5f2';
+                trTot.appendChild(tdTotBlank);
+
+                if (canViewPrice) { // Kalau Mempunyai Akses Cek Harga
+                    const tdTotHarga = document.createElement('td'); // Kolom Harga Jatuh Kosongi
+                    tdTotHarga.style.borderTop = '2px solid #e0e5f2';
+                    trTot.appendChild(tdTotHarga);
+
+                    const tdTotInsentif = document.createElement('td'); // Inject Harga Penjumlahan Total
+                    tdTotInsentif.style.textAlign = 'right';
+                    tdTotInsentif.style.fontWeight = '900';
+                    tdTotInsentif.style.color = '#05cd99';
+                    tdTotInsentif.style.fontSize = '14px';
+                    tdTotInsentif.style.borderTop = '2px solid #e0e5f2';
+                    tdTotInsentif.textContent = 'Rp ' + Number(totalDataInsentif).toLocaleString('id-ID');
+                    trTot.appendChild(tdTotInsentif);
+                }
+
+                const tdTotStatus = document.createElement('td'); // Kolom Status ujung kosongi
+                tdTotStatus.style.borderTop = '2px solid #e0e5f2';
+                trTot.appendChild(tdTotStatus);
+
+                tbody.appendChild(trTot);
+            }
+
             renderPaginationButtons('view', 'pagination-view', renderDataView);
         }
 
