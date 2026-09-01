@@ -428,6 +428,46 @@
             border-left: 3px solid #4318ff;
             font-weight: 700;
         }
+
+        /* --- PRE-PRINT / CETAK DOKUMEN STYLES (A4) --- */
+        @media print {
+            body { background: white !important; margin: 0; padding: 0; display: block; overflow: visible; font-family: 'Arial', sans-serif;}
+            /* Sembunyikan Navigasi yang Tidak Perlu */
+            .sidebar, .header, .footer-ticker, .sidebar-overlay, #doc-header-action-wrapper, #doc-open-actions { display: none !important; }
+            
+            /* Sesuaikan Box Content agar Pas Kertas */
+            .main-wrapper { padding: 0 !important; width: 100vw !important; height: auto !important; overflow: visible !important; display: block !important; }
+            .content-body { padding: 0 !important; overflow: visible !important; display: block !important; }
+            .input-wrapper { border: none !important; box-shadow: none !important; padding: 0 !important; width: 100% !important; max-height: none !important; height: auto !important; }
+            #doc-open-content { border: none !important; padding: 0 !important; max-height: none !important; overflow: visible !important; height: auto !important; background: white !important;}
+            
+            @page { size: A4 portrait; margin: 15mm; }
+            
+            /* Konversi Table jadi Bordered Solid (Monokrom Cetak) */
+            .table-thin { width: 100% !important; border-collapse: collapse !important; font-size: 11pt !important; color: #000 !important; margin-bottom: 30px !important; }
+            .table-thin th, .table-thin td { border: 1px solid #000 !important; color: #000 !important; padding: 8px !important; background-color: transparent !important; box-shadow: none !important;}
+            .table-thin th { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-weight: bold !important; text-align: center !important;}
+            
+            /* Style Grid Kotak Info */
+            .info-box-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; }
+            .info-box { border: 1px solid #333 !important; padding: 8px !important; box-shadow: none !important; background: transparent !important; page-break-inside: avoid; }
+            .info-box div:first-child { color: #555 !important; font-size: 9pt !important;}
+            .info-box div:last-child { color: #000 !important; font-size: 12pt !important;}
+            
+            /* Menampilkan Header Perusahaan */
+            .print-header { display: block !important; margin-bottom: 25px; text-align: center; border-bottom: 3px double #000; padding-bottom: 10px; }
+            .print-header h1 { font-size: 18pt !important; margin: 0 0 5px 0 !important; color: #000 !important; font-weight: bold;}
+            .print-header p { font-size: 11pt !important; margin: 0 !important; color: #000 !important; }
+            .print-section-title { display: block !important; margin: 20px 0 10px 0 !important; font-size: 13pt !important; font-weight: bold !important; color:#000 !important; text-align:center;}
+            
+            .btn-modern, hr, h4, .text-danger, .badge { display: none !important; }
+            
+            /* Kolom Tanda Tangan */
+            .print-signatures { display: flex !important; justify-content: space-between; margin-top: 50px; padding: 0 20px; font-size: 10pt; text-align: center; color: #000; page-break-inside: avoid;}
+            .sig-box { width: 30%; }
+            .sig-line { margin-top: 70px; border-top: 1px solid #000; font-weight: bold; }
+            #doc-open-badge { display: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -1585,7 +1625,7 @@
                                     <div class="input-wrapper" style="width: 100%; height: calc(100vh - 120px); display: flex; flex-direction: column;">
                                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; flex-shrink: 0;">
                                             <h3 class="text-secondary font-bold" style="font-size:22px;">Detail Dokumen <span id="doc-open-badge"></span></h3>
-                                            <div style="display:flex; gap:10px;">
+                                            <div style="display:flex; gap:10px;" id="doc-header-action-wrapper">
                                                 <button class="btn-modern" onclick="goBackFromDocument()">Kembali</button>
                                             </div>
                                         </div>
@@ -2666,25 +2706,56 @@
                             infoMode = `<div style="margin-top:15px; padding:10px; background:#d1fae5; color:#065f46; border-radius:4px; font-weight:bold; text-align:center; font-size:12px;">Hanya Lihat.</div>`;
                         }
 
+                        const topActions = document.getElementById('doc-header-action-wrapper');
+                        let actionHeaderHtml = '';
+                        if (statusVal === 'approve' || statusVal === 'approved') {
+                            actionHeaderHtml = `
+                                <button class="btn-modern" style="background:#fff; color:#05cd99; border:1px solid #05cd99; padding:6px 12px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 5px rgba(5, 205, 153, 0.1);" onclick="window.print()" title="Print / Simpan PDF">
+                                    <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg> Cetak PDF
+                                </button>
+                                <button class="btn-modern" style="background:#fff; color:#10b981; border:1px solid #10b981; padding:6px 12px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 5px rgba(16, 185, 129, 0.1);" onclick="exportDetailToExcel('${row[1]}')" title="Export Excel">
+                                    <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> Export Excel
+                                </button>
+                            `;
+                        }
+                        topActions.innerHTML = actionHeaderHtml + '<button class="btn-modern" onclick="goBackFromDocument()">Kembali</button>';
+
+                        let docPrintTitle = (row[3] === 'BS') ? "DATA BARANG BS / REJECT" : "LAPORAN HASIL PRODUKSI";
+                        
                         document.getElementById('doc-open-content').innerHTML = `
-                            <div style="display: flex; gap: 40px; margin-bottom: 20px;">
-                                <div style="flex:1; display: grid; grid-template-columns: 120px 1fr; gap: 8px;">
-                                    <strong>Unit</strong> <span>: ${row[0] || '-'}</span>
-                                    <strong>ID Laporan</strong> <span>: ${row[1] || '-'}</span>
-                                    <strong>Tanggal</strong> <span>: ${row[2] || '-'}</span>
-                                    <strong>Tipe</strong> <span>: ${row[3] || '-'}</span>
-                                    <strong>Status</strong> <span>: ${row[9] || '-'}</span>
+                            <div class="print-header" style="display:none;">
+                                <h1>${docPrintTitle}</h1>
+                                <p>Nomor Dokumen Laporan: <b>${row[1] || '-'}</b></p>
+                            </div>
+                            <div class="info-box-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Unit Area</div>
+                                    <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px;">${row[0] || '-'}</div>
                                 </div>
-                                <div style="flex:1; display: grid; grid-template-columns: 120px 1fr; gap: 8px;">
-                                    <strong>Karu</strong> <span>: ${row[4] || '-'}</span>
-                                    <strong>Shift</strong> <span>: ${row[5] || '-'}</span>
-                                    <strong>Pekerjaan</strong> <span>: ${row[6] || '-'}</span>
-                                    <strong>Operator</strong> <span>: ${row[7] || '-'}</span>
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">ID Laporan</div>
+                                    <div style="font-size:14px; color:#4318ff; font-weight:800; margin-top:4px;">${row[1] || '-'}</div>
+                                </div>
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Tanggal & Shift</div>
+                                    <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px;">${row[2] || '-'} <span style="font-size:11px; font-weight:normal;">(${row[5] || '-'})</span></div>
+                                </div>
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Ketua Regu</div>
+                                    <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px;">${row[4] || '-'}</div>
+                                </div>
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Pekerjaan / Tipe</div>
+                                    <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px;">${row[6] || '-'}</div>
+                                </div>
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02); grid-column: span 2;">
+                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Operator Penanggung Jawab</div>
+                                    <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px; overflow:hidden; text-overflow:ellipsis;">${row[7] || '-'}</div>
                                 </div>
                             </div>
-                            <hr style="margin: 15px 0; border: none; border-top: 1px solid #e0e5f2;">
+                            <div class="print-section-title" style="display:none;">Data Rincian Barang</div>
+                            <h4 style="margin-bottom:12px; color:#2b3674;">Rincian Barang Produksi</h4>
                             <div>
-                                <h4 style="margin-bottom:12px; color:#2b3674;">Rincian Barang Produksi</h4>
                                 <div id="scroll-wrapper" style="background:#fff; border-radius:4px; border:1px solid #e0e5f2; overflow-x:auto; width:100%;">
                                     <table class="table-thin" style="width:100%; border-collapse: collapse; min-width: 800px;">
                                         <thead>
@@ -2703,6 +2774,20 @@
                                             ${rincianDocTr}
                                         </tbody>
                                     </table>
+                                </div>
+                            </div>
+                            <div class="print-signatures" style="display:none;">
+                                <div class="sig-box">
+                                    Dibuat Oleh,<br><span style="font-size:10pt;">(Produksi)</span>
+                                    <div class="sig-line">NAMA: ${row[4] || '-'}</div>
+                                </div>
+                                <div class="sig-box">
+                                    Mengetahui,<br><span style="font-size:9pt;">(Staff Produksi)</span>
+                                    <div class="sig-line">NAMA : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                                </div>
+                                <div class="sig-box">
+                                    Disetujui,<br><span style="font-size:9pt;">(Supervisor)</span>
+                                    <div class="sig-line">NAMA: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
                                 </div>
                             </div>
                             ${infoMode}
@@ -2933,26 +3018,41 @@
                             rincianDocTr = `<tr><td colspan="6" style="text-align:center; padding:15px; color:#ee5d50;">Tunggu sebentar, data detail sedang dimuat...</td></tr>`;
                         }
 
+                        const topActions = document.getElementById('doc-header-action-wrapper');
+                        topActions.innerHTML = `
+                            <button class="btn-modern" onclick="goBackFromDocument()">Kembali</button>
+                        `;
+
                         document.getElementById('doc-open-content').innerHTML = `
-                            <div style="display: flex; gap: 40px; margin-bottom: 20px;">
-                                <div style="flex:1; display: grid; grid-template-columns: 120px 1fr; gap: 8px;">
-                                    <strong>Unit</strong> <span>: ${row[0] || '-'}</span>
-                                    <strong>No Dokumen</strong> <span>: <span style="color:#4318ff; font-weight:800;">${row[3] || '-'}</span></span>
-                                    <strong>Tanggal</strong> <span>: ${row[1] || '-'}</span>
-                                    <strong>Pekerjaan</strong> <span>: ${row[2] || '-'}</span>
-                                    <strong>Ket. Header</strong> <span>: ${row[9] || '-'}</span>
+                            <div class="print-header" style="display:none;">
+                                <h1>Bukti Penerimaan Barang</h1>
+                                <p>Nomor Dokumen: <b>${row[3] || '-'}</b></p>
+                            </div>
+                            <div class="info-box-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Unit Penerima</div>
+                                    <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px;">${row[0] || '-'}</div>
                                 </div>
-                                <div style="flex:1; display: grid; grid-template-columns: 120px 1fr; gap: 8px;">
-                                    <strong>Supplier</strong> <span>: ${row[6] || '-'}</span>
-                                    <strong>Ref SJ</strong> <span>: ${row[7] || '-'}</span>
-                                    <strong>Ref OM</strong> <span>: ${row[8] || '-'}</span>
-                                    <strong>Operator</strong> <span>: ${row[4] || '-'}</span>
-                                    <strong>Shift</strong> <span>: ${row[5] || '-'}</span>
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Nomor Dokumen</div>
+                                    <div style="font-size:14px; color:#4318ff; font-weight:800; margin-top:4px;">${row[3] || '-'}</div>
+                                </div>
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Tanggal / Waktu</div>
+                                    <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px;">${row[1] || '-'} <span style="font-size:11px; font-weight:normal;">(${row[5] || '-'})</span></div>
+                                </div>
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Pekerjaan Area</div>
+                                    <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px;">${row[2] || '-'}</div>
+                                </div>
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02); grid-column: span 2;">
+                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Supplier & Ekspedisi</div>
+                                    <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px; overflow:hidden; text-overflow:ellipsis;">${row[6] || '-'} <span style="font-weight:normal; font-size:12px; color:#8f9bba;">| Surat Jalan: ${row[7] || '-'}</span></div>
                                 </div>
                             </div>
-                            <hr style="margin: 15px 0; border: none; border-top: 1px solid #e0e5f2;">
+                            <div class="print-section-title" style="display:none;">Data Rincian Fisik Aktual</div>
+                            <h4 style="margin-bottom:12px; color:#2b3674;">Rincian Pemeriksaan Bahan Baku</h4>
                             <div>
-                                <h4 style="margin-bottom:12px; color:#2b3674;">Rincian Pemeriksaan Bahan Baku</h4>
                                 <div id="scroll-wrapper" style="background:#fff; border-radius:4px; border:1px solid #e0e5f2; overflow-x:auto; width:100%;">
                                     <table class="table-thin" style="width:100%; border-collapse: collapse; min-width: 800px;">
                                         <thead>
@@ -2969,6 +3069,34 @@
                                             ${rincianDocTr}
                                         </tbody>
                                     </table>
+                                </div>
+                            </div>
+                            <div class="print-signatures" style="display:none;">
+                                <div class="sig-box">
+                                    Dihitung & Diterima Oleh,<br><span style="font-size:9pt;">(Bag. Pengadaan / Gudang)</span>
+                                    <div class="sig-line">NAMA: ${row[4] || '-'}</div>
+                                </div>
+                                <div class="sig-box">
+                                    Diserahkan Oleh,<br><span style="font-size:9pt;">(Sopir / Ekspedisi)</span>
+                                    <div class="sig-line">NAMA : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                                </div>
+                                <div class="sig-box">
+                                    Mengetahui,<br><span style="font-size:9pt;">(Supervisor / Manager)</span>
+                                    <div class="sig-line">NAMA: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                                </div>
+                            </div>
+                            <div class="print-signatures" style="display:none;">
+                                <div class="sig-box">
+                                    Dihitung & Diterima Oleh,<br><span style="font-size:9pt;">(Bag. Pengadaan / Gudang)</span>
+                                    <div class="sig-line">NAMA: ${row[4] || '-'}</div>
+                                </div>
+                                <div class="sig-box">
+                                    Diserahkan Oleh,<br><span style="font-size:9pt;">(Sopir / Ekspedisi)</span>
+                                    <div class="sig-line">NAMA : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                                </div>
+                                <div class="sig-box">
+                                    Mengetahui,<br><span style="font-size:9pt;">(Supervisor / Manager)</span>
+                                    <div class="sig-line">NAMA: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
                                 </div>
                             </div>
                             <div style="margin-top:15px; padding:10px; background:#d1fae5; color:#065f46; border-radius:4px; font-weight:bold; text-align:center; font-size:12px;">Hanya Lihat. Dokumen BBK saat ini tidak dapat diubah setelah di-submit.</div>
@@ -7086,6 +7214,42 @@
               </tr>`;
           });
           tbody.innerHTML = html;
+      }
+
+      // --- LOGIKA MESIN PENCETAK EXCEL ---
+      function exportDetailToExcel(docId) {
+          // Tangkap Tabel yang terbuka pada form Intip Detail/Document Open
+          const tableElement = document.querySelector('#doc-open-content table');
+          
+          if (!tableElement) {
+              return alert("Gagal mencari Tabel Rincian Data untuk di ekspor!");
+          }
+          
+          try {
+              // 1. Ekstrak data HTML tabel ke Array format Excel
+              const ws = XLSX.utils.table_to_sheet(tableElement, { raw: true });
+              
+              // 2. Beri Sentuhan Modern Auto Width Kolom 
+              // Diberikan kolom secukupnya karena layout tabel standar
+              let colsSettings = [
+                  { wch: 6 },  // Kolom A: NO
+                  { wch: 45 }, // Kolom B: Barang / Nama
+                  { wch: 15 }, // Kolom C: Kategori / Target
+                  { wch: 25 }, // Kolom D: Kolom Teks
+                  { wch: 25 }, // Kolom E: Motif
+                  { wch: 10 }  // Kolom F: QTY Terakhir
+              ];
+              ws['!cols'] = colsSettings;
+              
+              // 3. Render Menjadi FIle dan Download
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, "Detail Laporan");
+              XLSX.writeFile(wb, `AiOTools_Report_${docId}.xlsx`);
+              
+          } catch (error) {
+              console.error("Crash Processing Excel Document", error);
+              showDialog("Maaf, Ekspor tidak berhasil memproses data detail. Format tabel mungkin tidak terbaca", "warning");
+          }
       }
     </script>
 </body>
