@@ -638,7 +638,7 @@
             <div class="header-actions">
                 <div class="select-wrapper">
                     <select class="header-select" id="headerUnitSelect" onchange="filterLaporanData()">
-                        <option value="">Semua Unit</option>
+                        <option value="" selected>Semua Unit</option>
                         <option value="CV JHB 1">CV JHB 1</option>
                         <option value="CV JHB 2">CV JHB 2</option>            
                         <option value="CV JHB 5">CV JHB 5</option>
@@ -1118,7 +1118,7 @@
                   </div>
                   <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
                       <select id="filter-laporan-unit" class="search-input" onchange="filterLaporanData()">
-                          <option value="">Semua Unit</option>
+                          <option value="" selected>Semua Unit</option>
                           <option value="CV JHB 1">CV JHB 1</option>
                           <option value="CV JHB 2">CV JHB 2</option>                          
                           <option value="CV JHB 5">CV JHB 5</option>
@@ -1629,24 +1629,35 @@
                                     </div>
                                 </div>
                               
-                                <!-- 9. VIEW DOKUMEN BUKA -->
-                                <div id="view-document-open" class="view-section">
-                                    <div class="input-wrapper" style="width: 100%; height: calc(100vh - 120px); display: flex; flex-direction: column;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; flex-shrink: 0;">
-                                            <h3 class="text-secondary font-bold" style="font-size:22px;">Detail Dokumen <span id="doc-open-badge"></span></h3>
-                                            <div style="display:flex; gap:10px;" id="doc-header-action-wrapper">
-                                                <button class="btn-modern" onclick="goBackFromDocument()">Kembali</button>
+                                <!-- 9. VIEW DOKUMEN BUKA (MODAL FLOATING) -->
+                                <div id="view-document-open" style="display:none; position:fixed; inset:0; background:rgba(43,54,116,0.85); z-index:9999; backdrop-filter:blur(5px); align-items:center; justify-content:center; padding: 20px;">
+                                    <div class="input-wrapper" style="width: 100%; max-width: 1100px; height: 95vh; background: #fff; border-radius: 12px; display: flex; flex-direction: column; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.3); padding: 30px;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom: 15px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;">
+                                            <h3 class="text-secondary font-bold" style="font-size:20px; margin:0;">Tinjauan Dokumen <span id="doc-open-badge"></span></h3>
+                                            <div style="display:flex; gap:8px;" id="doc-header-action-wrapper">
+                                                <button class="btn-modern" style="background:#ee5d50;" onclick="goBackFromDocument()">&times; Tutup</button>
                                             </div>
                                         </div>
-                                        <div id="doc-open-content" style="flex: 1; border:1px solid #e0e5f2; border-radius:8px; padding:20px; margin-bottom:15px; font-size:14px; background:#f4f7fe; overflow-y:auto; min-height: 0;">
+                                        <div id="doc-open-content" style="flex: 1; padding: 20px 0; font-size:14px; background:#fff; overflow-y:auto; overflow-x:hidden;">
                                             <!-- Data Header and Isi -->
                                         </div>
-                                        <div id="doc-open-actions" style="display:none; justify-content:center; gap:20px; padding-top: 15px; border-top: 1px solid #f0f0f0; flex-shrink: 0;">
-                                            <button type="button" class="btn-modern" style="background:#ee5d50; color:#fff; padding:12px 30px; font-weight:800;" onclick="batalDokumen()">Batal</button>
-                                            <button type="button" class="btn-modern" style="background:#fef08a; color:#854d0e; padding:12px 30px; font-weight:800;" onclick="editDokumen()">Edit</button>
-                                            <button type="button" class="btn-modern" style="background:#bbf7d0; color:#166534; padding:12px 30px; font-weight:800;" onclick="alert('Dokumen di-approve!')">Approve</button>
+                                        <div id="doc-open-actions" style="display:none; justify-content:center; gap:15px; padding-top: 15px; border-top: 1px solid #f0f0f0; flex-shrink: 0;">
+                                            <button type="button" class="btn-modern" style="background:#ee5d50; color:#fff; padding:10px 30px; font-weight:800;" onclick="batalDokumen()">Batal</button>
+                                            <button type="button" class="btn-modern" style="background:#fef08a; color:#854d0e; padding:10px 30px; font-weight:800;" onclick="editDokumen()">Edit</button>
+                                            <button type="button" id="btn-approve-action" class="btn-modern" style="background:#10b981; color:#fff; padding:10px 30px; font-weight:800;" onclick="alert('Approve')">Approve</button>
                                         </div>
                                     </div>
+                                    <!-- Menyesuaikan Gaya Kertas Cetakan Untuk Modal -->
+                                    <style>
+                                        @media print {
+                                            body * { visibility: hidden !important; }
+                                            #view-document-open { display: block !important; position: absolute !important; inset: auto !important; background: transparent !important; padding:0 !important; }
+                                            #view-document-open .input-wrapper { box-shadow: none !important; max-width: none !important; height: auto !important; padding:0 !important; }
+                                            #doc-open-content, #doc-open-content * { visibility: visible !important; }
+                                            #doc-open-content { position: absolute; left: 0; top: 0; padding:0 !important; overflow: visible !important; }
+                                            #doc-header-action-wrapper, #doc-open-actions { display: none !important; }
+                                        }
+                                    </style>
                                 </div>
                                 
                                 <!-- 10. VIEW TRACKING SJ -->
@@ -1930,7 +1941,51 @@
             container.appendChild(nextBtn);
         }
 
+        let logoutTimer;
+        // Fungsi mereset waktu 1 Jam (3.600.000 ms) saat user melakukan aktivitas
+        function resetLogoutTimer() {
+            clearTimeout(logoutTimer);
+            logoutTimer = setTimeout(() => confirmLogout(null, true), 3600000); 
+        }
+
+        // Cek Local Storage (Memory Login Browser)
+        function checkSession() {
+            const session = localStorage.getItem('authSession');
+            if (session) {
+                try {
+                    const data = JSON.parse(session);
+                    window.currentUserName = data.user;
+                    window.currentUserRole = data.role;
+                    window.currentUserUnit = data.unit;
+
+                    document.querySelector('.profile-name').textContent = window.currentUserName;
+                    document.querySelector('.profile-role').textContent = `${window.currentUserRole} | ${window.currentUserUnit}`;
+                    document.getElementById('profileImage').src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(window.currentUserName) + "&background=4318ff&color=fff&rounded=true";
+
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    
+                    const roleSelect = document.getElementById('roleSelect');
+                    if(roleSelect) {
+                        roleSelect.value = window.currentUserRole;
+                        roleSelect.disabled = ((window.currentUserRole || "").toLowerCase() !== 'author');
+                    }
+                    
+                    try { loadDashboardStats(); } catch(e){}
+                    try { applyRoleAccess(window.currentUserRole); } catch(e){}
+                } catch (e) {
+                    localStorage.removeItem('authSession');
+                }
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", async function() {
+            // Jalankan Session & Anti-AFK
+            checkSession(); 
+            window.onload = resetLogoutTimer;
+            document.onmousemove = resetLogoutTimer;
+            document.onkeypress = resetLogoutTimer;
+            document.ontouchstart = resetLogoutTimer;
+            document.onclick = resetLogoutTimer;
 
             // --- Event Delegation untuk semua input dinamis ---
             document.body.addEventListener('input', function(e) {
@@ -2647,7 +2702,7 @@
                     
                     btnOpen.onclick = async () => {
                         window.currentEditingReport = row;
-                        switchView('document-open');
+                        document.getElementById('view-document-open').style.display = 'flex'; // Pakai Mode Flex Overlay
                         document.getElementById('doc-open-badge').innerHTML = '';
                         window.currentOpenDocType = String(row[3] || '').toUpperCase();
 
@@ -3038,9 +3093,9 @@
                     btnOpen.innerHTML = `<svg style="width:16px; height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>`; 
                     
                     btnOpen.onclick = async () => {
-                        switchView('document-open');
+                        document.getElementById('view-document-open').style.display = 'flex'; // Pakai Mode Flex Overlay
                         const idLaporan = row[3];
-                        document.getElementById('doc-open-badge').innerHTML = '<span style="background:#ebfcf6; color:#05cd99; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; vertical-align:middle; margin-left:10px;">BBK</span>';
+                        document.getElementById('doc-open-badge').innerHTML = '<span style="background:#e0e5ff; color:#4318ff; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; vertical-align:middle; margin-left:10px;">CEK BBK FISIK</span>';
                         
                         document.getElementById('doc-open-content').innerHTML = '<div style="text-align:center; padding:30px; font-weight:bold; color:#4318ff;">Mengambil Data Detail BBK...</div>';
 
@@ -3267,6 +3322,13 @@
                     window.currentUserRole = response.role || "Operator";
                     window.currentUserUnit = response.unit || "";
                     window.currentUserName = response.name || user;
+
+                    // STAY TO LOGIN (Simpan di memory browser)
+                    localStorage.setItem('authSession', JSON.stringify({
+                        user: window.currentUserName,
+                        role: window.currentUserRole,
+                        unit: window.currentUserUnit
+                    }));
 
                     // Update UI Profile (Nama, Role, Foto)
                     document.querySelector('.profile-name').textContent = response.name || user;
@@ -3704,12 +3766,7 @@
         }
 
         function goBackFromDocument() {
-            const badge = document.getElementById('doc-open-badge').innerText;
-            if (badge.includes('BBK')) {
-                switchView('buku-pengecekan');
-            } else {
-                switchView('data-laporan');
-            }
+            document.getElementById('view-document-open').style.display = 'none'; // Cukup tutup window Modal-nya
         }
 
         function editDokumen() {
@@ -5291,9 +5348,11 @@
         }
 
         // --- GANTI FUNGSI KONFIRMASI LAINNYA ---
-        function confirmLogout(e) {
+        function confirmLogout(e, forceLogout = false) {
             if(e) e.preventDefault();
-            showDialog("Apakah Anda yakin ingin keluar?", "confirm", () => {
+            
+            const executeLogout = () => {
+                localStorage.removeItem('authSession'); // Hapus Memori 
                 const loginOverlay = document.getElementById('loginOverlay');
                 if(loginOverlay) { 
                     loginOverlay.classList.remove('hidden'); 
@@ -5328,7 +5387,13 @@
                 document.getElementById('stat-rp-kirim').textContent = `Rp 0`;
                 document.getElementById('stat-op-total').innerHTML = `0 <span style="font-size:14px; font-weight:400; color:#e0e5ff;">Orang</span>`;
                 document.getElementById('stat-op-units').innerHTML = '';
-            });
+            };
+
+            if (forceLogout) {
+                showDialog("Sesi Anda telah habis karena tidak ada aktivitas (1 Jam). Anda Otomatis dikeluarkan.", "warning", executeLogout);
+            } else {
+                showDialog("Apakah Anda yakin ingin keluar?", "confirm", executeLogout);
+            }
         }
         function batalDokumen() {
             showDialog("Apakah Anda yakin ingin membatalkan dokumen ini? Qty akan diubah menjadi 0 dan saldo akan kembali ke gudang.", "confirm", () => {
@@ -5409,7 +5474,7 @@
                                 <button class="btn-modern" style="background:#fff; color:#10b981; border:1px solid #10b981; padding:6px 12px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 5px rgba(16, 185, 129, 0.1);" onclick="exportDetailToExcel('${idLaporan}')" title="Export Excel">
                                     <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> Export Excel
                                 </button>
-                                <button class="btn-modern" onclick="goBackFromDocument()">Kembali</button>
+                                <button class="btn-modern" style="background:#ee5d50;" onclick="goBackFromDocument()">&times; Tutup</button>
                             `;
                         }
 
