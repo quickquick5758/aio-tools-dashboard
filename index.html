@@ -248,6 +248,11 @@
         .menu-trigger-icon { display: none; }
         @media (max-width: 1024px) { .grid-main { grid-template-columns: 1fr; } }
         @media (max-width: 768px) { 
+            /* Fix Login Wrapper on Mobile (HP) */
+            .login-left-illustration { display: none !important; }
+            .login-wrapper-split { padding: 20px; justify-content: center; gap: 0; }
+            .login-box { max-width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid #e0e5f2; }
+            
             .menu-trigger-icon { display: block; } /* Munculkan icon hamburger di HP */
             
             .sidebar { 
@@ -2380,6 +2385,11 @@
                 const fullData = await panggilBackend('getDataLaporan', {});
                 window.rawLaporanData = fullData || [];
                 filterLaporanData();
+                
+                // Ambil Data Detail Rincian Produksi sebagai peluru siap pakai di belakang layar
+                panggilBackend('getDataProduksi', {}).then(res => {
+                    window.rawViewData = res || [];
+                }).catch(e => console.warn("Latar Belakang Fetch Detail Produksi Tertahan."));
 
                 if(btnRefresh) { 
                     btnRefresh.innerHTML = '<svg style="width:14px; height:14px; margin-right:4px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh'; 
@@ -2503,19 +2513,19 @@
                     btnView.style.color = '#4318ff';
                     btnView.title = 'Intip Dokumen';
                     btnView.innerHTML = `<svg style="width:16px; height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>`;
-                    btnView.onclick = (e) => {
+                    btnView.onclick = async (e) => {
                         const modal = document.getElementById('modal-intip');
                         modal.style.display = 'flex';
+                        modal.style.top = '50%';
+                        modal.style.left = '50%';
+                        modal.style.transform = 'translate(-50%, -50%)';
+                        modal.style.maxWidth = '90vw';
                         
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        let topPos = rect.top;
-                        let leftPos = rect.left - 460;
-                        
-                        if(leftPos < 10) leftPos = rect.right + 10;
-                        if(topPos + 400 > window.innerHeight) topPos = window.innerHeight - 410;
-                        
-                        modal.style.top = topPos + 'px';
-                        modal.style.left = leftPos + 'px';
+                        document.getElementById('intip-content').innerHTML = '<div style="text-align:center; padding:20px; font-weight:bold;">Mengambil data dari server...</div>';
+
+                        if (!window.rawViewData || window.rawViewData.length === 0) {
+                             window.rawViewData = await panggilBackend('getDataProduksi', {}) || [];
+                        }
 
                         let rincianIntipTr = '';
                         if (window.rawViewData && window.rawViewData.length > 0) {
@@ -2577,13 +2587,19 @@
                         btnOpen.innerHTML = `<svg style="width:16px; height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>`; 
                     }
                     
-                    btnOpen.onclick = () => {
+                    btnOpen.onclick = async () => {
                         window.currentEditingReport = row;
-                        window.currentEditingDetails = window.rawViewData ? window.rawViewData.filter(r => r[1] === row[1]) : [];
-                        
                         switchView('document-open');
                         document.getElementById('doc-open-badge').innerHTML = '';
                         window.currentOpenDocType = String(row[3] || '').toUpperCase();
+
+                        document.getElementById('doc-open-content').innerHTML = '<div style="text-align:center; padding:30px; font-weight:bold; color:#4318ff;">Mengambil Data Rincian Detail...</div>';
+                        document.getElementById('doc-open-actions').style.display = 'none';
+
+                        if (!window.rawViewData || window.rawViewData.length === 0) {
+                             window.rawViewData = await panggilBackend('getDataProduksi', {}) || [];
+                        }
+                        window.currentEditingDetails = window.rawViewData ? window.rawViewData.filter(r => r[1] === row[1]) : [];
                         
                         let rincianDocTr = '';
                         let totalQty = 0;
@@ -2814,17 +2830,19 @@
                     btnView.style.color = '#4318ff';
                     btnView.title = 'Intip Dokumen BBK';
                     btnView.innerHTML = `<svg style="width:16px; height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>`;
-                    btnView.onclick = (e) => {
+                    btnView.onclick = async (e) => {
                         const modal = document.getElementById('modal-intip');
                         modal.style.display = 'flex';
+                        modal.style.top = '50%';
+                        modal.style.left = '50%';
+                        modal.style.transform = 'translate(-50%, -50%)';
+                        modal.style.maxWidth = '90vw';
 
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        let topPos = rect.top;
-                        let leftPos = rect.left - 460;
-                        if(leftPos < 10) leftPos = rect.right + 10;
-                        if(topPos + 400 > window.innerHeight) topPos = window.innerHeight - 410;
-                        modal.style.top = topPos + 'px';
-                        modal.style.left = leftPos + 'px';
+                        document.getElementById('intip-content').innerHTML = '<div style="text-align:center; padding:20px; font-weight:bold;">Mengambil data BBK...</div>';
+
+                        if (!window.rawBbkDetailData || window.rawBbkDetailData.length === 0) {
+                             window.rawBbkDetailData = await panggilBackend('getBbkDetailData', {}) || [];
+                        }
 
                         const idLaporan = row[3]; // Kolom D
                         let rincianIntipTr = '';
@@ -2872,11 +2890,17 @@
                     btnOpen.title = 'Buka Dokumen (Read Only)';
                     btnOpen.innerHTML = `<svg style="width:16px; height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>`; 
                     
-                    btnOpen.onclick = () => {
+                    btnOpen.onclick = async () => {
                         switchView('document-open');
                         const idLaporan = row[3];
                         document.getElementById('doc-open-badge').innerHTML = '<span style="background:#ebfcf6; color:#05cd99; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; vertical-align:middle; margin-left:10px;">BBK</span>';
                         
+                        document.getElementById('doc-open-content').innerHTML = '<div style="text-align:center; padding:30px; font-weight:bold; color:#4318ff;">Mengambil Data Detail BBK...</div>';
+
+                        if (!window.rawBbkDetailData || window.rawBbkDetailData.length === 0) {
+                             window.rawBbkDetailData = await panggilBackend('getBbkDetailData', {}) || [];
+                        }
+
                         let rincianDocTr = '';
                         let totalQty = 0;
                         if (window.rawBbkDetailData && window.rawBbkDetailData.length > 0) {
