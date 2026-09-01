@@ -443,9 +443,10 @@
             
             @page { size: A4 portrait; margin: 15mm; }
             
-            /* Konversi Table jadi Bordered Solid (Monokrom Cetak) */
-            .table-thin { width: 100% !important; border-collapse: collapse !important; font-size: 11pt !important; color: #000 !important; margin-bottom: 30px !important; }
-            .table-thin th, .table-thin td { border: 1px solid #000 !important; color: #000 !important; padding: 8px !important; background-color: transparent !important; box-shadow: none !important;}
+            /* Konversi Table jadi Bordered Solid (Monokrom Cetak) - Dipaksa Wrap/Pindah Baris */
+            #scroll-wrapper { overflow: visible !important; width: 100% !important; border: none !important; }
+            .table-thin { width: 100% !important; border-collapse: collapse !important; font-size: 10pt !important; color: #000 !important; margin-bottom: 30px !important; table-layout: fixed !important; }
+            .table-thin th, .table-thin td { border: 1px solid #000 !important; color: #000 !important; padding: 6px !important; background-color: transparent !important; box-shadow: none !important; white-space: normal !important; word-wrap: break-word !important; overflow-wrap: break-word !important; }
             .table-thin th { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-weight: bold !important; text-align: center !important;}
             
             /* Style Grid Kotak Info */
@@ -457,10 +458,9 @@
             /* Menampilkan Header Perusahaan */
             .print-header { display: block !important; margin-bottom: 25px; text-align: center; border-bottom: 3px double #000; padding-bottom: 10px; }
             .print-header h1 { font-size: 18pt !important; margin: 0 0 5px 0 !important; color: #000 !important; font-weight: bold;}
-            .print-header p { font-size: 11pt !important; margin: 0 !important; color: #000 !important; }
-            .print-section-title { display: block !important; margin: 20px 0 10px 0 !important; font-size: 13pt !important; font-weight: bold !important; color:#000 !important; text-align:center;}
             
-            .btn-modern, hr, h4, .text-danger, .badge { display: none !important; }
+            /* Teks atau Box yang dilarang tercetak ke PDF */
+            .print-no, .btn-modern, h4, .text-danger, .badge { display: none !important; }
             
             /* Kolom Tanda Tangan */
             .print-signatures { display: flex !important; justify-content: space-between; margin-top: 50px; padding: 0 20px; font-size: 10pt; text-align: center; color: #000; page-break-inside: avoid;}
@@ -1629,9 +1629,9 @@
                                     </div>
                                 </div>
                               
-                                <!-- 9. VIEW DOKUMEN BUKA (MODAL FLOATING) -->
-                                <div id="view-document-open" style="display:none; position:fixed; inset:0; background:rgba(43,54,116,0.65); z-index:9999; align-items:center; justify-content:center; padding: 20px;">
-                                    <div class="input-wrapper" style="width: 100%; max-width: 1100px; height: 95vh; background: #fff; border-radius: 2px; display: flex; flex-direction: column; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.3); padding: 30px;">
+                                <!-- 9. VIEW DOKUMEN BUKA (MODAL FLOATING DIPERLEBAR) -->
+                                <div id="view-document-open" style="display:none; position:fixed; inset:0; background:transparent; z-index:9999; align-items:center; justify-content:center; padding: 20px;">
+                                    <div class="input-wrapper" style="width: 98vw; max-width: 100%; height: 96vh; background: #fff; border-radius: 2px; display: flex; flex-direction: column; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.15); border: 1px solid #e0e5f2; padding: 25px 30px;">
                                         <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom: 15px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;">
                                             <h3 class="text-secondary font-bold" style="font-size:20px; margin:0;">Tinjauan Dokumen <span id="doc-open-badge"></span></h3>
                                             <div style="display:flex; gap:8px;" id="doc-header-action-wrapper">
@@ -2839,81 +2839,80 @@
 
                         let infoMode = '';
                         if (canEdit && (statusVal === 'approve' || statusVal === 'approved')) {
-                            infoMode = `<div style="margin-top:15px; padding:10px; background:#e0e5ff; color:#4318ff; border-radius:4px; font-weight:bold; text-align:center; font-size:12px;">Mode Author: Mengedit dokumen yang sudah di-Approve.</div>`;
+                            infoMode = `<div class="print-no" style="margin-top:15px; padding:10px; background:#e0e5ff; color:#4318ff; border-radius:4px; font-weight:bold; text-align:center; font-size:12px;">Mode Author: Mengedit dokumen yang sudah di-Approve.</div>`;
                         } else if (!canEdit) {
-                            infoMode = `<div style="margin-top:15px; padding:10px; background:#d1fae5; color:#065f46; border-radius:4px; font-weight:bold; text-align:center; font-size:12px;">Hanya Lihat.</div>`;
+                            infoMode = `<div class="print-no" style="margin-top:15px; padding:10px; background:#d1fae5; color:#065f46; border-radius:4px; font-weight:bold; text-align:center; font-size:12px;">Hanya Lihat.</div>`;
                         }
 
-                        let docPrintTitle = isBS ? "MEMO PENUKARAN BARANG BS / REJECT" : "DATA LAPORAN HASIL PRODUKSI";
+                        let docPrintTitle = isBS ? "LAPORAN DATA BARANG BS / REJECT" : "LAPORAN DATA HASIL PRODUKSI";
                         
                         document.getElementById('doc-open-content').innerHTML = `
                             <div class="print-header" style="display:none;">
-                                <h1>${docPrintTitle}</h1>
-                                <p>Nomor Dokumen Laporan: <b>${row[1] || '-'}</b></p>
+                                <h1 style="text-transform: uppercase;">${docPrintTitle}</h1>
                             </div>
                             <div class="info-box-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px;">
-                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:2px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                                     <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Unit Area</div>
                                     <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px;">${row[0] || '-'}</div>
                                 </div>
-                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:2px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                                     <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">ID Laporan</div>
                                     <div style="font-size:14px; color:#4318ff; font-weight:800; margin-top:4px;">${row[1] || '-'}</div>
                                 </div>
-                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:2px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                                     <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Tanggal & Shift</div>
                                     <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px;">${row[2] || '-'} <span style="font-size:11px; font-weight:normal;">(${row[5] || '-'})</span></div>
                                 </div>
-                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
-                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Ketua Regu (Karu)</div>
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:2px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Ketua Regu</div>
                                     <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px;">${row[4] || '-'}</div>
                                 </div>
                                 ${!isBS ? `
-                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:2px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                                     <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Pekerjaan / Tipe</div>
                                     <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px;">${row[6] || '-'}</div>
                                 </div>
-                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02); grid-column: span 2;">
-                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Operator</div>
+                                <div class="info-box" style="background:#fff; border:1px solid #e0e5f2; padding:12px; border-radius:2px; box-shadow:0 2px 8px rgba(0,0,0,0.02); grid-column: span 2;">
+                                    <div style="font-size:10px; color:#8f9bba; font-weight:700; text-transform:uppercase;">Operator Penanggung Jawab</div>
                                     <div style="font-size:14px; color:#2b3674; font-weight:800; margin-top:4px; overflow:hidden; text-overflow:ellipsis;">${row[7] || '-'}</div>
                                 </div>` : ''}
                             </div>
+                            
                             <div class="print-section-title" style="display:none;">Data Rincian Barang</div>
                             <h4 style="margin-bottom:12px; color:#2b3674;">Rincian Barang Produksi</h4>
-                            <div>
-                                <div id="scroll-wrapper" style="background:#fff; border-radius:4px; border:1px solid #e0e5f2; overflow-x:auto; width:100%;">
-                                    <table class="table-thin" style="width:100%; border-collapse: collapse; min-width: ${isBS?'600px':'800px'};">
-                                        <thead>
-                                            <tr style="background:#f8fafc;">
-                                                ${tableHeaderHtml}
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${rincianDocTr}
-                                        </tbody>
-                                    </table>
-                                </div>
+                            
+                            <div id="scroll-wrapper" style="background:#fff; border-radius:2px; border:1px solid #e0e5f2; overflow-x:auto; width:100%;">
+                                <table class="table-thin" style="width:100%; border-collapse: collapse; min-width: ${isBS?'600px':'800px'};">
+                                    <thead>
+                                        <tr style="background:#f8fafc;">
+                                            ${tableHeaderHtml}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${rincianDocTr}
+                                    </tbody>
+                                </table>
                             </div>
+
+                            <!-- Area Kolom Garis TTD Cetak -->
                             <div class="print-signatures" style="display:none;">
                                 <div class="sig-box">
-                                    Dibuat Oleh,<br><br><br><br>
-                                    <b>${row[4] || '-'}</b>
-                                    <hr style="border:0; border-top:1px solid #000; width:100%; margin:2px 0;">
+                                    Dibuat Oleh,<br><br><br><br><br>
+                                    <div style="border-top:1px solid #000; width:80%; margin:0 auto 4px auto;"></div>
                                     <span style="font-size:9pt;">(Produksi)</span>
                                 </div>
                                 <div class="sig-box">
-                                    Mengetahui,<br><br><br><br>
-                                    <b>&nbsp;</b>
-                                    <hr style="border:0; border-top:1px solid #000; width:100%; margin:2px 0;">
+                                    Mengetahui,<br><br><br><br><br>
+                                    <div style="border-top:1px solid #000; width:80%; margin:0 auto 4px auto;"></div>
                                     <span style="font-size:9pt;">(Staff Produksi)</span>
                                 </div>
                                 <div class="sig-box">
-                                    Disetujui,<br><br><br><br>
-                                    <b>&nbsp;</b>
-                                    <hr style="border:0; border-top:1px solid #000; width:100%; margin:2px 0;">
+                                    Disetujui,<br><br><br><br><br>
+                                    <div style="border-top:1px solid #000; width:80%; margin:0 auto 4px auto;"></div>
                                     <span style="font-size:9pt;">(Supervisor / Manajer)</span>
                                 </div>
                             </div>
+                            
                             ${infoMode}
                         `;
                         
