@@ -490,19 +490,23 @@
             padding: 5px 10px !important; border-radius: 0 !important; box-shadow: none !important;
         }
         
-        /* TABLE AUTO SCALING (A4 RATIO) */
+        /* TABLE AUTO SCALING (A4 RATIO FIXED) */
         #view-document-open .table-thin {
-            width: 100% !important; table-layout: auto !important; border-collapse: collapse !important;
+            width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important;
         }
         
         /* STYLE BORDER TEGAS DAN MEMAKSA BARIS (WRAP) KETIKA DATA KODE PANJANG */
         #view-document-open .table-thin th, 
         #view-document-open .table-thin td {
-            font-size: 10pt !important;
+            font-size: 9.5pt !important;
             white-space: normal !important; 
             word-wrap: break-word !important; 
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
             border: 1px solid black !important;
             color: black !important;
+            padding: 5px !important;
+            vertical-align: top !important;
         }
         
         /* FORCE QTY SELALU RATA KANAN SAAT PRINT PREVIEW (Target ke Headernya juga) */
@@ -2151,6 +2155,10 @@
             if(document.getElementById('filter-trackingsj-end')) document.getElementById('filter-trackingsj-end').value = today;
             if(document.getElementById('filter-sisaom-month')) document.getElementById('filter-sisaom-month').value = `${year}-${month}`;
             
+            // Tambahan Khusus Buku Pengecekan
+            if(document.getElementById('filter-bpc-start')) document.getElementById('filter-bpc-start').value = firstDay;
+            if(document.getElementById('filter-bpc-end')) document.getElementById('filter-bpc-end').value = today;
+            
         }); // Akhir dari DOMContentLoaded
         function togglePasswordVisibility() {
             const passInput = document.getElementById('password');
@@ -2782,6 +2790,19 @@
                         document.getElementById('doc-open-badge').innerHTML = '';
                         window.currentOpenDocType = String(row[3] || '').toUpperCase();
 
+                        // --- FIX BUG BADGE NYANGKUT: Refresh otomatis Badge berdasarkan Status Dokumen Laporan Saat Ini ---
+                        const dynamicStatusDoc = document.getElementById('doc-state-status');
+                        if (dynamicStatusDoc) {
+                            let stateColorBg = '#8f9bba'; 
+                            if (statusVal === 'approved' || statusVal === 'approve') { stateColorBg = '#10b981'; }
+                            else if (statusVal === 'submitted' || statusVal === 'draft') { stateColorBg = '#f59e0b'; }
+                            else if (statusVal === 'batal') { stateColorBg = '#ef4444'; }
+                            
+                            dynamicStatusDoc.style.display = 'inline-block';
+                            dynamicStatusDoc.style.background = stateColorBg;
+                            dynamicStatusDoc.innerText = (statusVal === 'approve' || statusVal === 'approved') ? 'APPROVED' : statusVal.toUpperCase();
+                        }
+
                         document.getElementById('doc-open-content').innerHTML = '<div style="text-align:center; padding:30px; font-weight:bold; color:#4318ff;">Mengambil Data Rincian Detail...</div>';
                         document.getElementById('doc-open-actions').style.display = 'none';
 
@@ -2817,26 +2838,33 @@
                         // SETTING HEADERS (Jika BS Format Lebih Simpel) Terapkan Persentase Lebar!
                         if (isBS) {
                             tableHeaderHtml = `
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:5%;">No</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:55%;">Kode - Nama Barang - Motif</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:20%;">Kategori</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; text-align:center; width:10%;">Qty</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:10%;">Keterangan</th>
+                                <th style="padding:8px; border-bottom:1px solid #e0e5f2; width:5%;">No</th>
+                                <th style="padding:8px; border-bottom:1px solid #e0e5f2; width:45%;">Kode - Nama Barang - Motif</th>
+                                <th style="padding:8px; border-bottom:1px solid #e0e5f2; width:15%;">Kategori</th>
+                                <th style="padding:8px; border-bottom:1px solid #e0e5f2; text-align:center; width:10%;">Qty</th>
+                                <th style="padding:8px; border-bottom:1px solid #e0e5f2; width:25%;">Keterangan</th>
                             `;
                         } else {
+                            // Hitungan persentase yang jauh lebih padat dan sempit
                             let priceHeaders = isAllowedToViewPrice ? `
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; text-align:right; width:8%;">Harga (Rp)</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; text-align:right; width:10%;">Insentif (Rp)</th>
+                                <th style="padding:8px; border-bottom:1px solid #e0e5f2; text-align:right; width:8%;">Harga (Rp)</th>
+                                <th style="padding:8px; border-bottom:1px solid #e0e5f2; text-align:right; width:10%;">Insentif</th>
                             ` : '';
+                            
+                            let kWidth = isAllowedToViewPrice ? '23%' : '27%';
+                            let sWidth = isAllowedToViewPrice ? '12%' : '15%';
+                            let oWidth = isAllowedToViewPrice ? '12%' : '14%';
+                            let bWidth = isAllowedToViewPrice ? '10%' : '14%';
+
                             tableHeaderHtml = `
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:3%;">No</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:35%;">Kode - Nama Barang</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:15%;">Kategori</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:15%;">Supplier</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:10%;">Motif</th>
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; text-align:center; width:5%;">Qty</th>
+                                <th style="padding:8px; border-bottom:1px solid #e0e5f2; width:3%;">No</th>
+                                <th style="padding:8px; border-bottom:1px solid #e0e5f2; width:${kWidth};">Kode - Nama Barang</th>
+                                <th style="padding:8px; border-bottom:1px solid #e0e5f2; width:${sWidth};">Kategori</th>
+                                <th style="padding:8px; border-bottom:1px solid #e0e5f2; width:${sWidth};">Supplier</th>
+                                <th style="padding:8px; border-bottom:1px solid #e0e5f2; width:${oWidth};">Motif</th>
+                                <th style="padding:8px; border-bottom:1px solid #e0e5f2; text-align:center; width:6%;">Qty</th>
                                 ${priceHeaders}
-                                <th style="padding:8px 12px; border-bottom:1px solid #e0e5f2; width:10%;">Keterangan</th>
+                                <th style="padding:8px; border-bottom:1px solid #e0e5f2; width:${bWidth};">Keterangan</th>
                             `;
                         }
 
@@ -3843,7 +3871,9 @@
         }
 
         function goBackFromDocument() {
-            document.getElementById('view-document-open').style.display = 'none'; // Cukup tutup window Modal-nya
+            document.getElementById('view-document-open').style.display = 'none'; // Tutup Modal-nya
+            const badgeBox = document.getElementById('doc-state-status');
+            if (badgeBox) badgeBox.style.display = 'none'; // Bersihkan total ghosting ui badge status
         }
 
         function editDokumen() {
