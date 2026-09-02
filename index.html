@@ -434,8 +434,22 @@
             @page { size: A4 portrait; margin: 12mm 15mm; }
             html, body { height: auto !important; overflow: visible !important; margin: 0 !important; padding: 0 !important; background: white !important; font-family: 'Arial', sans-serif;}
             
-            /* Sembunyikan elemen utama dari UI web (Dihapus sepenuhnya dari perhitungan posisi) */
-            body > *:not(#view-document-open) { display: none !important; }
+            /* Sembunyikan UI layout secara spesifik agar parent container tidak ikut tersembunyi */
+            aside, header, footer, #loginOverlay, .sidebar-overlay { display: none !important; }
+            
+            /* Sembunyikan semua section view lain di dalam body konten kecuali modal dokumen */
+            .content-body > div:not(#view-document-open) { display: none !important; }
+            
+            /* Netralkan padding & batas container parent agar area cetak modal bisa penuh ke sudut */
+            .main-wrapper, .content-body {
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
+                display: block !important;
+                background: transparent !important;
+            }
             
             /* Eksekusi penarikan posisi Modal/Popup ke puncak kiri atas tanpa celah margin js */
             #view-document-open {
@@ -5712,7 +5726,7 @@
                 tdTotText.style.fontWeight = '800';
                 tdTotText.style.color = '#2b3674';
                 tdTotText.style.borderTop = '2px solid #e0e5f2';
-                tdTotText.textContent = 'TOTAL PENJUMLAHAN DATA FILTER :';
+                tdTotText.textContent = 'TOTAL :';
                 trTot.appendChild(tdTotText);
 
                 const tdTotQty = document.createElement('td'); // Isi Ke Kolom QTY (Index 14)
