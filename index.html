@@ -754,8 +754,8 @@
                             <h3 class="text-secondary font-bold" id="stat-qty-masuk">0 <span>Pcs</span></h3>
                             <p class="stat-rupiah text-success font-bold" id="stat-rp-masuk" style="font-size:16px; margin-top:4px; display:none;">Rp 0</p>
                         </div>
-                        <div class="icon-box icon-blue">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <div class="icon-box" style="background: linear-gradient(135deg, #e0e5ff 0%, #b3c2fd 100%); font-size: 26px; box-shadow: 0 6px 15px rgba(67, 24, 255, 0.2); border: 2px solid #fff; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1));">
+                            📦
                         </div>
                     </div>
 
@@ -765,8 +765,8 @@
                             <h3 class="text-secondary font-bold" id="stat-qty-prod">0 <span>Pcs</span></h3>
                             <p class="stat-rupiah text-success font-bold" id="stat-rp-prod" style="font-size:16px; margin-top:4px; display:none;">Rp 0</p>
                         </div>
-                        <div class="icon-box icon-green">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <div class="icon-box" style="background: linear-gradient(135deg, #ccfbf0 0%, #9bf5d8 100%); font-size: 26px; box-shadow: 0 6px 15px rgba(5, 205, 153, 0.2); border: 2px solid #fff; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1));">
+                            🛠️
                         </div>
                     </div>
 
@@ -776,8 +776,8 @@
                             <h3 class="text-secondary font-bold" id="stat-qty-kirim">0 <span>Pcs</span></h3>
                             <p class="stat-rupiah text-success font-bold" id="stat-rp-kirim" style="font-size:16px; margin-top:4px; display:none;">Rp 0</p>
                         </div>
-                        <div class="icon-box icon-red">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
+                        <div class="icon-box" style="background: linear-gradient(135deg, #fce8e8 0%, #fbb8b8 100%); font-size: 26px; box-shadow: 0 6px 15px rgba(238, 93, 80, 0.2); border: 2px solid #fff; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1));">
+                            🚚
                         </div>
                     </div>
 
@@ -824,20 +824,28 @@
                         </div>
                     </div>
 
-                    <div class="card">
-                        <h3 class="text-secondary font-bold" style="margin-bottom: 16px;">Material Utama</h3>
-                        <div class="inventory-box">
-                            <div class="inv-header">
-                                <span class="inv-tag">ID: MAT-01</span>
-                                <span class="inv-stock text-secondary">4.250 KG</span>
-                            </div>
-                            <p class="inv-title text-secondary">POLYESTER STAPLE FIBER</p>
-                            <p class="inv-subtitle">Pemakaian Dakron</p>
+                    <div class="card" style="display: flex; flex-direction: column; max-height: 400px; padding: 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap:wrap; gap: 8px;">
+                            <h3 class="text-secondary font-bold" style="margin-bottom: 0; font-size: 16px;">Antrean Approve</h3>
+                            <span class="badge" style="background:#ffedd5; color:#f97316; font-size:11px; padding:4px 8px; border-radius:4px; font-weight:800; display:none;" id="count-pending-dash">0 Laporan</span>
                         </div>
-                        <h4 class="section-title">Top Operator Hari Ini</h4>
-                        <div class="operator-item">
-                            <div class="operator-info"><div class="operator-avatar avatar-orange">AS</div><div><p class="operator-name text-secondary">Asep Setiawan</p><p class="operator-unit">JHB 2 JAHIT</p></div></div>
-                            <span class="operator-score">850 Pcs</span>
+                        <p style="font-size: 11px; color:#8f9bba; margin-bottom: 12px;">Berikut adalah daftar dokumen yang telah di-submit ke pusat, namun masih menunggu approve.</p>
+                        
+                        <div class="table-container" style="flex: 1; padding: 0; box-shadow: none; border: 1px solid #e0e5f2; border-radius: 6px; overflow-y: auto;">
+                            <table class="table-thin" style="width: 100%; font-size: 11px; border-collapse: collapse;">
+                                <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 10;">
+                                    <tr>
+                                        <th style="padding: 8px 6px; font-size: 10px; border-bottom:1px solid #e0e5f2; background: #f8fafc; color:#a3aed1;">ID Laporan</th>
+                                        <th style="padding: 8px 6px; font-size: 10px; border-bottom:1px solid #e0e5f2; background: #f8fafc; color:#a3aed1;">Tgl</th>
+                                        <th style="padding: 8px 6px; font-size: 10px; border-bottom:1px solid #e0e5f2; background: #f8fafc; color:#a3aed1; text-align: center;">Tipe</th>
+                                        <th style="padding: 8px 6px; font-size: 10px; border-bottom:1px solid #e0e5f2; background: #f8fafc; color:#a3aed1;">Karu</th>
+                                        <th style="padding: 8px 6px; font-size: 10px; border-bottom:1px solid #e0e5f2; background: #f8fafc; color:#a3aed1;">Operator</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-pending-dash">
+                                    <tr><td colspan="5" style="text-align: center; color: #8f9bba; padding: 25px;">Sedang memindai data server...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -3393,6 +3401,11 @@
             }).reverse();
             
             renderLaporanTable(filtered, 1);
+            
+            // Trigger juga Tabel Sinkronisasi di Dashboard ketika ini diproses (Backgroud/Tiba tiba input file dsb)
+            if (typeof updateDashboardPendingTable === 'function') {
+                updateDashboardPendingTable();
+            }
         }
 
         async function handleLogin(event) {
@@ -5803,7 +5816,7 @@
                 const tdTotText = document.createElement('td');
                 tdTotText.colSpan = 13; // Tarik Panjang Kosongkan dari awal hingga sebelum QTY (13 index)
                 tdTotText.style.textAlign = 'right';
-                tdTotText.style.fontWeight = '800';
+                tdTotText.style.fontWeight = '600';
                 tdTotText.style.color = '#2b3674';
                 tdTotText.style.borderTop = '2px solid #e0e5f2';
                 tdTotText.textContent = 'TOTAL :';
@@ -5811,7 +5824,7 @@
 
                 const tdTotQty = document.createElement('td'); // Isi Ke Kolom QTY (Index 14)
                 tdTotQty.style.textAlign = 'right';
-                tdTotQty.style.fontWeight = '900';
+                tdTotQty.style.fontWeight = '600';
                 tdTotQty.style.color = '#4318ff';
                 tdTotQty.style.fontSize = '14px';
                 tdTotQty.style.borderTop = '2px solid #e0e5f2';
@@ -5829,7 +5842,7 @@
 
                     const tdTotInsentif = document.createElement('td'); // Inject Harga Penjumlahan Total
                     tdTotInsentif.style.textAlign = 'right';
-                    tdTotInsentif.style.fontWeight = '900';
+                    tdTotInsentif.style.fontWeight = '600';
                     tdTotInsentif.style.color = '#05cd99';
                     tdTotInsentif.style.fontSize = '14px';
                     tdTotInsentif.style.borderTop = '2px solid #e0e5f2';
@@ -7679,6 +7692,95 @@
               console.error("Crash Processing Excel Document", error);
               showDialog("Maaf, Ekspor tidak berhasil memproses data detail. Format tabel mungkin tidak terbaca", "warning");
           }
+      }
+
+      // --- LOGIKA MENGAMBIL TABEL ANTRIAN DARI LAPORAN MENUJU DASHBOARD ---
+      function updateDashboardPendingTable() {
+          const tbody = document.getElementById('tbody-pending-dash');
+          const countBadge = document.getElementById('count-pending-dash');
+          if (!tbody || !window.rawLaporanData) return;
+
+          // Perizinan: Supervisor keatas melihat semua, jika cuma operator dia hanya lihat antriannya sendiir.
+          const roleLower = (window.currentUserRole || "").toLowerCase();
+          const privilegedAreaRoles = ['author', 'supervisor', 'ppic']; 
+          const myUnit = window.currentUserUnit || '';
+          
+          let filterDraft = window.rawLaporanData.filter(r => {
+              if(!r[1]) return false;
+              let status = String(r[9] || '').toLowerCase().trim();
+              let isDraft = (status === 'submitted' || status === 'draft');
+              
+              if (!privilegedAreaRoles.includes(roleLower) && myUnit) {
+                  return isDraft && String(r[0] || '').toLowerCase() === myUnit.toLowerCase();
+              }
+              return isDraft;
+          }).reverse(); // Sorting dari paling teratas/baru
+
+          // Batasi memuat maksimal 50 antrian agar tidak crash di tabel mungil
+          const totalDrafts = filterDraft.length;
+          filterDraft = filterDraft.slice(0, 50);
+
+          if (countBadge) {
+              if (totalDrafts > 0) {
+                  countBadge.style.display = 'inline-block';
+                  countBadge.innerText = `${totalDrafts} Laporan`;
+              } else {
+                  countBadge.style.display = 'none';
+              }
+          }
+
+          if (totalDrafts === 0) {
+              tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #05cd99; padding: 25px; font-weight:800;">Tidak ada dokumen pending ✅</td></tr>`;
+              return;
+          }
+
+          let html = '';
+          filterDraft.forEach(d => {
+              let opDisplay = d[7] || '-';
+              if(opDisplay.length > 20) opDisplay = opDisplay.substring(0,20) + '...'; // Potong nama jika kepanjangan
+              
+              let tipe = String(d[3] || '').toUpperCase();
+              let bge = '#f3f4f6'; let col = '#374151';
+              if (tipe === 'PRD') { bge = '#e0e5ff'; col = '#4318ff'; }
+              if (tipe === 'BS') { bge = '#fce8e8'; col = '#ee5d50'; }
+
+              html += `
+              <tr style="border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#f4f7fe';" onmouseout="this.style.background='#fff';" onclick="quickNavigateToLaporan('${d[1]}')">
+                  <td style="padding: 8px 6px; font-weight: 700; color: #2b3674; font-size:10px;">${d[1]}</td>
+                  <td style="padding: 8px 6px;">${d[2] || '-'}</td>
+                  <td style="padding: 8px 6px; text-align: center;">
+                      <span style="background:${bge}; color:${col}; padding: 2px 6px; border-radius: 4px; font-weight: 700;">${tipe}</span>
+                  </td>
+                  <td style="padding: 8px 6px; font-weight: 600;">${d[4] || '-'}</td>
+                  <td style="padding: 8px 6px; font-size: 10px;">${opDisplay}</td>
+              </tr>
+              `;
+          });
+          
+          tbody.innerHTML = html;
+      }
+
+      function quickNavigateToLaporan(idDoc) {
+          // Buka Halaman
+          const menuLaporan = document.querySelector('a[onclick*="data-laporan"]');
+          if (menuLaporan) {
+              switchView('data-laporan', menuLaporan);
+          } else {
+              switchView('data-laporan');
+          }
+          
+          // Inject Kode Ke Kolom Search, Filter & Loadnya.
+          setTimeout(() => {
+              const searchEl = document.getElementById('filter-laporan-search');
+              if (searchEl) {
+                  // Bypass Filter Tanggal
+                  if(document.getElementById('filter-laporan-start')) document.getElementById('filter-laporan-start').value = '';
+                  if(document.getElementById('filter-laporan-end')) document.getElementById('filter-laporan-end').value = '';
+
+                  searchEl.value = idDoc;
+                  filterLaporanData();
+              }
+          }, 100);
       }
     </script>
 </body>
