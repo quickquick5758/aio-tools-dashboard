@@ -826,7 +826,7 @@
 
                     <div class="card" style="display: flex; flex-direction: column; max-height: 400px; padding: 18px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap:wrap; gap: 8px;">
-                            <h3 class="text-secondary font-bold" style="margin-bottom: 0; font-size: 16px;">Antrean Approve</h3>
+                            <h3 class="text-secondary font-bold" style="margin-bottom: 0; font-size: 16px;">Antrean Approval</h3>
                             <span class="badge" style="background:#ffedd5; color:#f97316; font-size:11px; padding:4px 8px; border-radius:4px; font-weight:800; display:none;" id="count-pending-dash">0 Laporan</span>
                         </div>
                         <p style="font-size: 11px; color:#8f9bba; margin-bottom: 12px;">Berikut adalah daftar dokumen yang telah di-submit ke pusat, namun masih menunggu approve.</p>
@@ -2210,6 +2210,23 @@
                     // Render Data Grafik Terkini
                     window.dashboardChartData = res.chartData || {};
                     if (typeof updateDashboardChart === 'function') updateDashboardChart();
+                    
+                    // --- MENGISI DATA TABEL ANTREAN APPROVE SAAT DASHBOARD DIMUAT ---
+                    // Mengambil 20 data kilat terbaru agar tabel dashboard seketika muncul
+                    panggilBackend('getDataLaporanLatest', {}).then(laporanCepat => {
+                        window.rawLaporanData = laporanCepat || [];
+                        if (typeof updateDashboardPendingTable === 'function') updateDashboardPendingTable();
+                        
+                        // Menarik data penuh seluruh riwayat di belakang layar, agar jika ada pending lama ikut ketarik
+                        panggilBackend('getDataLaporan', {}).then(laporanFull => {
+                            window.rawLaporanData = laporanFull || [];
+                            if (typeof updateDashboardPendingTable === 'function') updateDashboardPendingTable();
+                        }).catch(err => console.warn("Latar belakang data Laporan pending:", err));
+                    }).catch(err => {
+                        console.warn("Gagal tarik snapshot pending:", err);
+                        document.getElementById('tbody-pending-dash').innerHTML = `<tr><td colspan="5" style="text-align: center; color: #ee5d50; padding: 25px;">Koneksi gagal. Tarik ulang halaman.</td></tr>`;
+                    });
+
                 } else {
                     console.error("Gagal memuat dashboard stats:", res?.message);
                 }
