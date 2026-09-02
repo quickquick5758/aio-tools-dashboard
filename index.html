@@ -539,9 +539,36 @@
         /* 6. HAPUS ELEMEN UI NON-CETAK */
         #view-document-open button, 
         #view-document-open .btn,
+        #view-document-open .print-no,
         #view-document-open .alert-info { /* Menyembunyikan banner biru "Mode Author..." */
             display: none !important;
         }
+
+        /* 7. FORMAT WRAP TABEL AGAR TIDAK TERPOTONG */
+        #view-document-open #scroll-wrapper {
+            overflow: visible !important;
+            width: 100% !important;
+            border: none !important;
+            background: transparent !important;
+        }
+        #view-document-open .table-thin {
+            width: 100% !important;
+            min-width: 0 !important;
+            table-layout: auto !important; /* Paksa Browser Menyesuaikan Proporsi A4 */
+        }
+        #view-document-open .table-thin th, 
+        #view-document-open .table-thin td {
+            white-space: normal !important; /* Allow the content text to wrap freely */
+            word-wrap: break-word !important;
+            font-size: 11pt !important;
+            border: 1px solid black !important;
+        }
+        
+        #view-document-open .print-header { display: block !important; text-align: center; margin-bottom: 20px;}
+        #view-document-open .print-header h1 { font-size: 18pt !important; font-weight: bold; border-bottom: 2px solid black; padding-bottom: 5px;}
+        #view-document-open .print-header p { font-size: 12pt !important;}
+        #view-document-open .print-signatures { display: flex !important; justify-content: space-between; margin-top: 50px; text-align: center; }
+        #view-document-open .print-signatures .sig-box { width: 30%; font-weight: bold; }
     }
     </style>
 </head>
@@ -1014,7 +1041,7 @@
                             </div>
                         </div>
                         <button type="button" class="btn-modern" style="margin-top:12px; background:#d1fae5; color:#065f46; border:1px solid #a7f3d0; padding:6px 14px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:6px; transition:0.3s; box-shadow:0 2px 5px rgba(5,205,153,0.1);" onclick="forceAddRow('bbk')" onmouseover="this.style.background='#bbf7d0'" onmouseout="this.style.background='#d1fae5'">
-                            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg> Tambah Baris Manual
+                            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg> Tambah Baris
                         </button>
                     </div>
 
@@ -1938,13 +1965,23 @@
         window.rawBbkDetailData = [];
         let rawViewData = [];
 
+        window.nextViewAfterSuccess = ''; // Variabel Global Pengarah View
         function closeSuccessModal() {
             const modalAnim = document.getElementById('modal-success-anim');
             const btnOk = document.getElementById('btn-success-ok');
             if(modalAnim) modalAnim.style.display = 'none';
             if(btnOk) btnOk.style.display = 'none';
-            clearBbkForm();
-            switchView('buku-pengecekan');
+            
+            // Logika pindah halaman sesuai fungsi terakhir
+            if (window.nextViewAfterSuccess === 'buku-pengecekan') {
+                clearBbkForm();
+                switchView('buku-pengecekan');
+            } else if (window.nextViewAfterSuccess === 'data-laporan') {
+                switchView('data-laporan');
+            } else {
+                switchView('dashboard');
+            }
+            window.nextViewAfterSuccess = ''; // Reset State
         }
         let rawSisaOmData = [];
         window.currentEditingReport = null;
@@ -4368,6 +4405,7 @@
             if(docNumEl) docNumEl.textContent = "Memproses...";
             
             if(modalAnim) modalAnim.style.display = 'flex';
+            window.nextViewAfterSuccess = 'buku-pengecekan'; // Set arah kembalian BBK
 
               try {
                   const res = await panggilBackend('saveBbkToSheet', payload);
@@ -5526,20 +5564,19 @@
                         
                         // Mengatur Warna dinamis Badge Status Pada Buka Dokumen Utama
                         const elStatusState = document.getElementById('doc-state-status');
-                        let stateColorBg = '#8f9bba'; 
-                        if (statusVal === 'approved' || statusVal === 'approve') { stateColorBg = '#10b981'; }
-                        else if (statusVal === 'submitted' || statusVal === 'draft') { stateColorBg = '#f59e0b'; }
-                        else if (statusVal === 'batal') { stateColorBg = '#ef4444'; }
+                        let stateColorBg = '#10b981'; // Statik menjadi warna hijau karena proses sudah 100% SUKSES Approve
                         
                         if (elStatusState) {
                             elStatusState.style.display = 'inline-block';
                             elStatusState.style.background = stateColorBg;
-                            elStatusState.innerText = (statusVal === 'approve') ? 'APPROVED' : statusVal.toUpperCase();
+                            elStatusState.innerText = 'APPROVED';
                         }
+                        
+                        const topActions = document.getElementById('doc-header-action-wrapper');
                         if (topActions) {
                             topActions.innerHTML = `
                                 <button class="btn-modern" style="background:#fff; color:#05cd99; border:1px solid #05cd99; padding:6px 12px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 5px rgba(5, 205, 153, 0.1);" onclick="window.print()" title="Print / Simpan PDF">
-                                    <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg> Cetak PDF
+                                    <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 00-2-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg> Cetak PDF
                                 </button>
                                 <button class="btn-modern" style="background:#fff; color:#10b981; border:1px solid #10b981; padding:6px 12px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 5px rgba(16, 185, 129, 0.1);" onclick="exportDetailToExcel('${idLaporan}')" title="Export Excel">
                                     <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> Export Excel
@@ -5548,14 +5585,23 @@
                             `;
                         }
 
+                        // Sembunyikan blok aksi Edit & Approve yang ada di Footer Form Dokumen Utama
+                        const actionBawah = document.getElementById('doc-open-actions');
+                        if (actionBawah) actionBawah.style.display = 'none';
+
                         if (window.currentEditingReport) window.currentEditingReport[9] = 'Approved';
                         loadLaporanData(); 
                         
-                        setTimeout(() => {
-                            if(modalAnim) modalAnim.style.display = 'none';
-                        }, 2000);
-
-                    } else {
+                        // Menangani Bug nomor 4: Pastikan Modal Tampil beserta tombol penutupnya ("OK")
+                        const btnOk = document.getElementById('btn-success-ok');
+                        if(btnOk) {
+                            btnOk.style.display = 'block';
+                            window.nextViewAfterSuccess = 'data-laporan'; 
+                        } else {
+                            setTimeout(() => {
+                                if(modalAnim) modalAnim.style.display = 'none';
+                            }, 2000);
+                        } else {
                         throw new Error(res ? res.message : "Kesalahan server");
                     }
                 } catch (err) {
@@ -5887,7 +5933,7 @@
           if(docNumEl) docNumEl.textContent = "Memproses...";
           
           if(modalAnim) modalAnim.style.display = 'flex';
-          switchView('data-laporan');
+          window.nextViewAfterSuccess = 'data-laporan'; // Set arah kembalian PRD/BS
 
           try {
               // 2. Kirim data ke Google Sheets via Web App
@@ -5975,7 +6021,7 @@
                 if (index === activeIndex) {
                     item.style.backgroundColor = '#f4f7fe';
                     item.classList.add('active-suggestion');
-                    item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    item.scrollIntoView({ block: 'nearest', behavior: 'instant' });
                 } else {
                     item.style.backgroundColor = '#fff';
                     item.classList.remove('active-suggestion');
