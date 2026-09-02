@@ -75,12 +75,12 @@
         .header-select { background: #ffffff; border: 1px solid #f0f0f0; border-radius: 4px; color: #2b3674; font-weight: 700; padding: 0 32px 0 16px; font-size: 14px; cursor: pointer; outline: none; box-shadow: 0 2px 10px rgba(0,0,0,0.02); height: 44px; min-width: 140px; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
         .header-select:disabled { background-color: #f8fafc; color: #a3aed1; cursor: not-allowed; border-color: #e2e8f0; }
 
-        .profile-wrapper { display: flex; align-items: center; background: #ffffff; padding: 6px 20px 6px 6px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); border: 1px solid #f0f0f0; cursor: pointer; transition: all 0.2s; }
-        .profile-wrapper:hover { box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .profile-img { width: 40px; height: 40px; border-radius: 85%; }
-        .profile-info { display: flex; flex-direction: column; margin-left: 12px; }
-        .profile-name { font-size: 14px; font-weight: 700; color: #2b3674; line-height: 1.2; }
-        .profile-role { font-size: 12px; font-weight: 600; color: #8f9bba; }
+        .profile-wrapper { display: flex; align-items: center; background: #ffffff; padding: 0 16px 0 8px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); border: 1px solid #e0e5f2; cursor: pointer; transition: all 0.2s; height: 44px; box-sizing: border-box; }
+        .profile-wrapper:hover { box-shadow: 0 4px 15px rgba(67,24,255,0.08); border-color: #4318ff; }
+        .profile-img { width: 30px; height: 30px; border-radius: 50%; }
+        .profile-info { display: flex; flex-direction: column; margin-left: 10px; justify-content: center; }
+        .profile-name { font-size: 13px; font-weight: 700; color: #2b3674; line-height: 1.1; margin-bottom: 2px; }
+        .profile-role { font-size: 11px; font-weight: 600; color: #8f9bba; line-height: 1; }
 
         .profile-container { position: relative; display: inline-block; }
         .profile-dropdown { display: none; position: absolute; right: 0; top: 110%; background-color: #ffffff; min-width: 180px; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1); border-radius: 4px; z-index: 100; border: 1px solid #f0f0f0; overflow: hidden; }
@@ -302,6 +302,30 @@
             .barang-row-item, .bs-row-item {
                 min-width: 700px;
                 margin-bottom: 10px;
+            }
+
+            /* --- PERBAIKAN MODAL BUKA DOKUMEN RESPONSIVE DI HP --- */
+            #view-document-open {
+                padding: 10px !important;
+            }
+            #view-document-open .input-wrapper {
+                min-width: 0 !important;
+                width: 100% !important;
+                padding: 15px !important;
+                height: 100% !important;
+                max-height: 90vh !important;
+                margin: 0 !important;
+            }
+            #view-document-open .info-box-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 8px !important;
+            }
+            #view-document-open #scroll-wrapper {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+            }
+            #view-document-open .table-thin {
+                min-width: 800px !important; /* Paksa agar table horizontal scrolling rapi di HP */
             }
         }
         
@@ -607,7 +631,7 @@
                       </div>
                       <div class="submenu">
                           <a href="#" class="submenu-item" onclick="switchView('data-view', this)">View Data</a>
-                          <a href="#" class="submenu-item">Export</a>
+                          <a href="#" class="submenu-item">Rekap Produksi</a>
                       </div>
                       
                       <div class="menu-item has-submenu" onclick="toggleSubmenu(this)" style="padding-left:0px; margin-top:8px;">
@@ -1145,6 +1169,9 @@
                           <button id="btn-refresh-laporan" class="btn-modern" style="background:#f4f7fe; color:#4318ff; border: 1px solid #4318ff;" onclick="loadLaporanData()">
                               <svg style="width:14px; height:14px; margin-right:4px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh
                           </button>
+                          <button class="btn-modern" style="background:#fff; color:#10b981; border: 1px solid #10b981;" onclick="exportTableToExcel('laporan', 'Rekap_Global_Laporan')">
+                              <svg style="width:14px; height:14px; margin-right:4px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> Export Excel
+                          </button>
                           <button class="btn-modern" id="btn-laporan-input-baru" onclick="clearForm(); switchView('input-baru')">+ Input Baru</button>
                           <button class="btn-modern" id="btn-laporan-input-bs" onclick="clearBsForm(); switchView('input-bs')" style="background:#ee5d50;">+ Input BS</button>
                       </div>
@@ -1205,6 +1232,9 @@
                       <div style="display: flex; gap: 8px;">
                           <button id="btn-refresh-bpc" class="btn-modern" style="background:#f4f7fe; color:#4318ff; border: 1px solid #4318ff;" onclick="loadBbkGlobalData()">
                               <svg style="width:14px; height:14px; margin-right:4px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh
+                          </button>
+                          <button class="btn-modern" style="background:#fff; color:#10b981; border: 1px solid #10b981;" onclick="exportTableToExcel('bukuPengecekan', 'Rekap_Pengecekan_BBK')">
+                              <svg style="width:14px; height:14px; margin-right:4px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> Export Excel
                           </button>
                           <button class="btn-modern" id="btn-input-bbk-baru" onclick="clearBbkForm(); switchView('input-bbk')">+ Input Hasil Pengecekan</button>
                       </div>
@@ -1310,9 +1340,14 @@
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
                         <h3 class="text-primary font-bold" style="margin-bottom: 0;">View Data Produksi Detail</h3>
-                        <button id="btn-refresh-view" class="btn-modern" style="background:#f4f7fe; color:#4318ff; border: 1px solid #4318ff;" onclick="refreshViewData()">
-                            <svg style="width:14px; height:14px; margin-right:4px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh
-                        </button>
+                        <div style="display:flex; gap: 8px;">
+                            <button class="btn-modern" style="background:#fff; color:#10b981; border: 1px solid #10b981;" onclick="exportTableToExcel('view', 'Rincian_Detail_Produksi')">
+                                <svg style="width:14px; height:14px; margin-right:4px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> Export Excel
+                            </button>
+                            <button id="btn-refresh-view" class="btn-modern" style="background:#f4f7fe; color:#4318ff; border: 1px solid #4318ff;" onclick="refreshViewData()">
+                                <svg style="width:14px; height:14px; margin-right:4px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh
+                            </button>
+                        </div>
                     </div>
                     <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap: wrap;">
                         <select id="filter-view-unit" class="search-input" style="width: 150px;" onchange="filterViewData()">
@@ -2656,18 +2691,24 @@
                         const modal = document.getElementById('modal-intip');
                         modal.style.display = 'flex';
                         
-                        // Set posisi awal di dekat tombol
+                        // Set posisi & menyesuaikan untuk HP
                         const rect = e.currentTarget.getBoundingClientRect();
-                        let topPos = rect.top;
-                        let leftPos = rect.left - 460;
-                        
-                        // Koreksi agar tidak nabrak layar
-                        if(leftPos < 10) leftPos = rect.right + 10;
-                        if(topPos + 350 > window.innerHeight) topPos = window.innerHeight - 360;
-                        
-                        modal.style.top = topPos + 'px';
-                        modal.style.left = leftPos + 'px';
-                        modal.style.transform = 'none'; // Buang settingan ketengah
+                        if (window.innerWidth <= 768) {
+                            modal.style.top = '50%';
+                            modal.style.left = '50%';
+                            modal.style.transform = 'translate(-50%, -50%)';
+                            modal.style.width = '95vw';
+                        } else {
+                            let topPos = rect.top;
+                            let leftPos = rect.left - 460;
+                            if(leftPos < 10) leftPos = rect.right + 10;
+                            if(topPos + 350 > window.innerHeight) topPos = window.innerHeight - 360;
+                            
+                            modal.style.top = topPos + 'px';
+                            modal.style.left = leftPos + 'px';
+                            modal.style.transform = 'none';
+                            modal.style.width = '450px';
+                        }
                         
                         document.getElementById('intip-content').innerHTML = '<div style="text-align:center; padding:20px; font-weight:bold;">Mengambil data dari server...</div>';
 
@@ -2753,7 +2794,7 @@
                         const topActions = document.getElementById('doc-header-action-wrapper');
                         if (statusVal === 'approve' || statusVal === 'approved') {
                             topActions.innerHTML = `
-                                <button class="btn-modern" style="background:#fff; color:#05cd99; border:1px solid #05cd99; padding:6px 12px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 5px rgba(5, 205, 153, 0.1);" onclick="window.print()" title="Print / Simpan PDF">
+                                <button class="btn-modern" style="background:#fff; color:#05cd99; border:1px solid #05cd99; padding:6px 12px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 5px rgba(5, 205, 153, 0.1);" onclick="cetakDokumen('${row[1]}')" title="Print / Simpan PDF">
                                     <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg> Cetak PDF
                                 </button>
                                 <button class="btn-modern" style="background:#fff; color:#10b981; border:1px solid #10b981; padding:6px 12px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 5px rgba(16, 185, 129, 0.1);" onclick="exportDetailToExcel('${row[1]}')" title="Export Excel">
@@ -3074,18 +3115,24 @@
                         const modal = document.getElementById('modal-intip');
                         modal.style.display = 'flex';
                         
-                        // Set posisi awal di dekat tombol
+                        // Set posisi & menyesuaikan untuk HP
                         const rect = e.currentTarget.getBoundingClientRect();
-                        let topPos = rect.top;
-                        let leftPos = rect.left - 460;
-                        
-                        if(leftPos < 10) leftPos = rect.right + 10;
-                        if(topPos + 350 > window.innerHeight) topPos = window.innerHeight - 360;
-                        
-                        modal.style.top = topPos + 'px';
-                        modal.style.left = leftPos + 'px';
-                        modal.style.transform = 'none';
-                        modal.style.maxWidth = '90vw';
+                        if (window.innerWidth <= 768) {
+                            modal.style.top = '50%';
+                            modal.style.left = '50%';
+                            modal.style.transform = 'translate(-50%, -50%)';
+                            modal.style.width = '95vw';
+                        } else {
+                            let topPos = rect.top;
+                            let leftPos = rect.left - 460;
+                            if(leftPos < 10) leftPos = rect.right + 10;
+                            if(topPos + 350 > window.innerHeight) topPos = window.innerHeight - 360;
+                            
+                            modal.style.top = topPos + 'px';
+                            modal.style.left = leftPos + 'px';
+                            modal.style.transform = 'none';
+                            modal.style.width = '450px';
+                        }
 
                         document.getElementById('intip-content').innerHTML = '<div style="text-align:center; padding:20px; font-weight:bold;">Mengambil data BBK...</div>';
 
@@ -3385,7 +3432,8 @@
                     unitSelects.forEach(id => {
                         const el = document.getElementById(id);
                         if (el) {
-                            el.value = response.unit || "";
+                            // Khusus Admin Elite/Pengawas default UI nya menjadi kosong ("Semua Unit")
+                            el.value = isPrivileged ? "" : (response.unit || "");
                             el.disabled = !isPrivileged;
                         }
                     });
@@ -4016,14 +4064,14 @@
             // Kunci Unit di Form Input Baru sesuai area unit akun yang login
             const inputUnitSelect = document.getElementById('input-unit');
             if (inputUnitSelect) {
-                inputUnitSelect.value = window.currentUserUnit || "";
+                inputUnitSelect.value = privilegedRoles.includes(roleLower) ? "" : (window.currentUserUnit || "");
                 inputUnitSelect.disabled = !privilegedRoles.includes(roleLower);
             }
 
             // Kunci Unit di Form Input BS sesuai area unit akun yang login
             const bsUnitSelect = document.getElementById('bs-unit');
             if (bsUnitSelect) {
-                bsUnitSelect.value = window.currentUserUnit || "";
+                bsUnitSelect.value = privilegedRoles.includes(roleLower) ? "" : (window.currentUserUnit || "");
                 bsUnitSelect.disabled = !privilegedRoles.includes(roleLower);
             }
             if (roleLower === 'karu') {
@@ -4148,7 +4196,7 @@
 
             const unitEl = document.getElementById('bbk-unit');
             if(unitEl) {
-                unitEl.value = window.currentUserUnit || "";
+                unitEl.value = privilegedRoles.includes(roleLower) ? "" : (window.currentUserUnit || "");
                 unitEl.disabled = !privilegedRoles.includes(roleLower); // Kunci area kerja
             }
 
@@ -5503,7 +5551,7 @@
                         const topActions = document.getElementById('doc-header-action-wrapper');
                         if (topActions) {
                             topActions.innerHTML = `
-                                <button class="btn-modern" style="background:#fff; color:#05cd99; border:1px solid #05cd99; padding:6px 12px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 5px rgba(5, 205, 153, 0.1);" onclick="window.print()" title="Print / Simpan PDF">
+                                <button class="btn-modern" style="background:#fff; color:#05cd99; border:1px solid #05cd99; padding:6px 12px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 5px rgba(5, 205, 153, 0.1);" onclick="cetakDokumen('${idLaporan}')" title="Print / Simpan PDF">
                                     <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 00-2-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg> Cetak PDF
                                 </button>
                                 <button class="btn-modern" style="background:#fff; color:#10b981; border:1px solid #10b981; padding:6px 12px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 5px rgba(16, 185, 129, 0.1);" onclick="exportDetailToExcel('${idLaporan}')" title="Export Excel">
@@ -7513,7 +7561,61 @@
           tbody.innerHTML = html;
       }
 
-      // --- LOGIKA MESIN PENCETAK EXCEL ---
+      // --- FUNGSI MENCETAK (MODIFIKASI NAMA FILE JADI ID DOKUMEN) ---
+      function cetakDokumen(docId) {
+          const defaultTitle = document.title;
+          document.title = docId; // Manipulasi sementara agar Save as PDF merekam ini
+          window.print();
+          // Segera kembalikan title sesudah jeda print dialog lewat
+          setTimeout(() => { document.title = defaultTitle; }, 1000); 
+      }
+
+      // --- LOGIKA EXCEL MASSAL (DATA BUKU & VIEW) BERDASARKAN FILTER AKTIF ---
+      function exportTableToExcel(stateKey, prefixName) {
+          const state = tableStates[stateKey];
+          if (!state || !state.data || state.data.length === 0) {
+              return showDialog("Tidak ada data pada tabel untuk diekspor!", "warning");
+          }
+
+          // Variabel Hak Akses Harga & Insentif
+          const role = (window.currentUserRole || "").toLowerCase().trim();
+          const canViewPrice = ['author', 'supervisor', 'staff finance', 'admin finance', 'staff produksi'].includes(role); 
+
+          let headers = [];
+          let dataRows = [];
+
+          if (stateKey === 'laporan') {
+              headers = ["Unit", "ID Laporan", "Tanggal", "Tipe", "Karu", "Shift", "Pekerjaan", "Operator", "Total Qty", "Status"];
+              dataRows = state.data.map(r => [r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9]]);
+          } 
+          else if (stateKey === 'bukuPengecekan') {
+              headers = ["Unit", "Tanggal", "Proses Item", "Nomor Dokumen", "Nama Operator", "Shift", "Supplier", "Ref Dokumen SJ", "Ref Nomor OM", "Keterangan", "Status"];
+              dataRows = state.data.map(r => [r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[10]]);
+          } 
+          else if (stateKey === 'view') {
+              if (canViewPrice) {
+                  headers = ["Unit", "ID Laporan", "Tanggal", "Tipe", "Karu", "Shift", "Pekerjaan", "Operator", "Kode", "Nama Barang", "Kategori", "Supplier", "Motif", "Qty", "Keterangan", "Harga (Rp)", "Insentif (Rp)", "Status"];
+                  dataRows = state.data.map(r => [r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[10], r[11], r[12], r[13], r[14], r[15], r[16], r[17]]);
+              } else {
+                  headers = ["Unit", "ID Laporan", "Tanggal", "Tipe", "Karu", "Shift", "Pekerjaan", "Operator", "Kode", "Nama Barang", "Kategori", "Supplier", "Motif", "Qty", "Keterangan", "Status"];
+                  dataRows = state.data.map(r => [r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[10], r[11], r[12], r[13], r[14], r[17]]); 
+              }
+          }
+
+          const wsData = [headers, ...dataRows];
+          const ws = XLSX.utils.aoa_to_sheet(wsData);
+          
+          // Melebarkan ukuran default Cell saat dibuka di excel agar lebih aestetik (Kustom)
+          if(stateKey === 'view') { ws['!cols'] = [{wch:15}, {wch:22}, {wch:15}, {wch:8}, {wch:20}, {wch:15}, {wch:20}, {wch:35}, {wch:15}, {wch:40}, {wch:18}]; }
+          
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "Database_Export");
+          
+          const timeMark = new Date().toISOString().slice(0,10);
+          XLSX.writeFile(wb, `${prefixName}_${timeMark}.xlsx`);
+      }
+
+      // --- LOGIKA MESIN PENCETAK EXCEL DOKUMEN TUNGGAL (BUKA) ---
       function exportDetailToExcel(docId) {
           // Tangkap Tabel yang terbuka pada form Intip Detail/Document Open
           const tableElement = document.querySelector('#doc-open-content table');
