@@ -431,144 +431,75 @@
 
         /* --- PRE-PRINT / CETAK DOKUMEN STYLES (A4) FIX --- */
        @media print {
-        /* Seting Kertas & Reset Kanvas */
-        @page { size: A4 portrait; margin: 15mm; }
-        
-        html, body { 
-            height: auto !important; 
-            min-height: 100% !important; 
-            overflow: visible !important; 
-            margin: 0 !important; 
-            padding: 0 !important; 
-            background: white !important; 
-            font-family: 'Arial', sans-serif !important;
-            color: black !important; /* Paksa warna font hitam untuk cetak */
+        @page { size: A4 portrait; margin: 10mm; }
+
+        html, body {
+            margin: 0 !important; padding: 0 !important; background: white !important; color: black !important;
         }
 
-        /* 1. Isolasi Visibilitas (Sembunyikan semua kecuali modal dokumen) */
         body * { visibility: hidden !important; }
         #view-document-open, #view-document-open * { visibility: visible !important; }
 
-        /* 2. Tarik paksa container modal ke pojok kertas (0,0) */
+        /* MENGAMBIL ALIH DAN MEMBONGKAR MODAL PENCEGAH RESPONSIVE */
         #view-document-open {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            height: auto !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            transform: none !important;
-            box-shadow: none !important; 
-            border: none !important;
-            background: white !important;
-        }
-
-        /* 3. FORMAT HEADER INFO (4 Kotak: Unit Area, ID, Tanggal, Karu) */
-        /* Pastikan div pembungkus 4 kotak ini menggunakan class 'print-header-grid' */
-        #view-document-open .print-header-grid {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: stretch !important;
-            margin-bottom: 20px !important;
-            width: 100% !important;
+            position: absolute !important; left: 0 !important; top: 0 !important;
+            width: 100vw !important; max-width: 100vw !important; padding: 0 !important; margin: 0 !important; background: white !important;
         }
         
-        #view-document-open .print-header-box {
-            flex: 1 !important;
-            border: 1px solid black !important; /* Garis kotak sesuai sketsa */
-            padding: 8px 12px !important;
-            margin: 0 5px !important;
-            text-align: left !important;
-        }
-        #view-document-open .print-header-box:first-child { margin-left: 0 !important; }
-        #view-document-open .print-header-box:last-child { margin-right: 0 !important; }
-
-        /* 4. FORMAT TABEL RINCIAN BARANG */
-        #view-document-open table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-            margin-bottom: 30px !important;
-            font-size: 11pt !important;
+        #view-document-open .input-wrapper {
+            min-width: 0 !important; /* MENONAKTIFKAN HARDCODE 850px dari form induk */
+            width: 100% !important; max-width: 100% !important; 
+            border: none !important; box-shadow: none !important;
+            margin: 0 !important; padding: 0 !important;
         }
         
-        /* Membuat garis tabel dominan horizontal seperti sketsa */
-        #view-document-open th, 
-        #view-document-open td {
-            border-bottom: 1px solid black !important;
-            padding: 10px 8px !important;
-            text-align: left !important;
-        }
-        #view-document-open th {
-            border-top: 2px solid black !important;
-            border-bottom: 2px solid black !important;
-            text-transform: uppercase !important;
-        }
-        #view-document-open .table-total-row td {
-            border-top: 1px solid black !important;
-            border-bottom: 2px solid black !important;
-            font-weight: bold !important;
+        #view-document-open #scroll-wrapper, #view-document-open #doc-open-content {
+            overflow: visible !important; width: 100% !important; max-width: 100% !important; padding: 0 !important;
         }
 
-        /* 5. FORMAT KOLOM TANDA TANGAN (Dibuat, Mengetahui, Disetujui) */
-        /* Pastikan div pembungkus ttd menggunakan class 'print-signature-section' */
-        #view-document-open .print-signature-section {
-            display: flex !important;
-            justify-content: space-between !important;
-            margin-top: 40px !important;
-            width: 100% !important;
-            page-break-inside: avoid !important; /* Mencegah area TTD terpotong ke halaman 2 */
+        /* HEADER BOXES ALIGNMENT */
+        #view-document-open .info-box-grid {
+            display: flex !important; flex-wrap: wrap !important; gap: 5px !important; margin-bottom: 15px !important;
+        }
+        #view-document-open .info-box {
+            flex: 1 1 auto !important; min-width: 0 !important; border: 1px solid #000 !important;
+            padding: 5px 10px !important; border-radius: 0 !important; box-shadow: none !important;
         }
         
-        #view-document-open .signature-col {
-            text-align: center !important;
-            width: 30% !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: space-between !important;
-            min-height: 120px !important; /* Jarak tinggi untuk area coretan TTD */
+        /* TABLE AUTO SCALING (A4 RATIO) */
+        #view-document-open .table-thin {
+            width: 100% !important; table-layout: auto !important; border-collapse: collapse !important;
         }
         
-        #view-document-open .signature-line {
-            border-top: 1px solid black !important; /* Garis bawah untuk nama */
-            width: 90% !important;
-            margin: 0 auto !important;
-            padding-top: 5px !important;
+        /* STYLE BORDER TEGAS DAN MEMAKSA BARIS (WRAP) KETIKA DATA KODE PANJANG */
+        #view-document-open .table-thin th, 
+        #view-document-open .table-thin td {
+            font-size: 10pt !important;
+            white-space: normal !important; 
+            word-wrap: break-word !important; 
+            border: 1px solid black !important;
+            color: black !important;
+        }
+        
+        /* FORCE QTY SELALU RATA KANAN SAAT PRINT PREVIEW (Target ke Headernya juga) */
+        #view-document-open .table-thin th {
+            font-weight: bold !important; text-align: center !important; text-transform: uppercase !important;
         }
 
-        /* 6. HAPUS ELEMEN UI NON-CETAK */
+        #view-document-open .print-header { display: block !important; text-align: center; margin-bottom: 15px;}
+        #view-document-open .print-header h1 { font-size: 16pt !important; font-weight: bold; border-bottom: 2px solid black; padding-bottom: 5px; margin: 0;}
+        
+        /* GARIS TTD MENYESUAIKAN A4 BOTTOM */
+        #view-document-open .print-signatures { display: flex !important; justify-content: space-around !important; margin-top: 40px !important; text-align: center; page-break-inside: avoid; }
+        #view-document-open .print-signatures .sig-box { width: 30%; font-weight: bold; color: black !important;}
+        
+        /* HIDE NON REQUIRED ELEMENTS FOR PRINT */
         #view-document-open button, 
         #view-document-open .btn,
         #view-document-open .print-no,
-        #view-document-open .alert-info { /* Menyembunyikan banner biru "Mode Author..." */
-            display: none !important;
+        #view-document-open h4 { 
+            display: none !important; 
         }
-
-        /* 7. FORMAT WRAP TABEL AGAR TIDAK TERPOTONG */
-        #view-document-open #scroll-wrapper {
-            overflow: visible !important;
-            width: 100% !important;
-            border: none !important;
-            background: transparent !important;
-        }
-        #view-document-open .table-thin {
-            width: 100% !important;
-            min-width: 0 !important;
-            table-layout: auto !important; /* Paksa Browser Menyesuaikan Proporsi A4 */
-        }
-        #view-document-open .table-thin th, 
-        #view-document-open .table-thin td {
-            white-space: normal !important; /* Allow the content text to wrap freely */
-            word-wrap: break-word !important;
-            font-size: 11pt !important;
-            border: 1px solid black !important;
-        }
-        
-        #view-document-open .print-header { display: block !important; text-align: center; margin-bottom: 20px;}
-        #view-document-open .print-header h1 { font-size: 18pt !important; font-weight: bold; border-bottom: 2px solid black; padding-bottom: 5px;}
-        #view-document-open .print-header p { font-size: 12pt !important;}
-        #view-document-open .print-signatures { display: flex !important; justify-content: space-between; margin-top: 50px; text-align: center; }
-        #view-document-open .print-signatures .sig-box { width: 30%; font-weight: bold; }
     }
     </style>
 </head>
@@ -1734,7 +1665,7 @@
                                 <!-- 9. VIEW DOKUMEN BUKA (MODAL FLOATING DIPERLEBAR FIT KONTEN) -->
                                 <div id="view-document-open" style="display:none; position:fixed; inset:0; background:transparent; z-index:9999; align-items:flex-start; justify-content:center; padding: 30px 10px; overflow-y:auto;">
                                     <div class="input-wrapper" style="width: auto; min-width:850px; max-width: 95vw; height: auto; min-height:40vh; max-height: max-content; background: #fff; border-radius: 2px; display: flex; flex-direction: column; position: relative; box-shadow: 0 10px 50px rgba(43,54,116,0.3); border: 1px solid #e0e5f2; padding: 25px 30px; margin:auto;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom: 15px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;">
+                                        <div class="print-no" style="display:flex; justify-content:space-between; align-items:center; padding-bottom: 15px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;">
                                             <div style="display:flex; align-items:center; gap:12px;">
                                                 <h3 class="text-secondary font-bold" style="font-size:20px; margin:0; display:flex; align-items:center;">Tinjauan Dokumen <span id="doc-open-badge"></span></h3>
                                                 <span id="doc-state-status" style="display:none; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:800; color:#fff; box-shadow:0 2px 10px rgba(0,0,0,0.1); letter-spacing: 0.5px;">-</span>
@@ -2054,7 +1985,7 @@
 
         // Cek Local Storage (Memory Login Browser)
         function checkSession() {
-            const session = localStorage.getItem('authSession');
+            const session = sessionStorage.getItem('authSession');
             if (session) {
                 try {
                     const data = JSON.parse(session);
@@ -3001,19 +2932,16 @@
                             <!-- Area Kolom Garis TTD Cetak -->
                             <div class="print-signatures" style="display:none;">
                                 <div class="sig-box">
-                                    Dibuat Oleh,<br><br><br><br><br>
-                                    <div style="border-top:1px solid #000; width:80%; margin:0 auto 4px auto;"></div>
-                                    <span style="font-size:9pt;">(Produksi)</span>
+                                    Dibuat oleh,<br><br><br><br>
+                                    <div style="border-top:1px solid #000; width:90%; margin:0 auto;"></div>
                                 </div>
                                 <div class="sig-box">
-                                    Mengetahui,<br><br><br><br><br>
-                                    <div style="border-top:1px solid #000; width:80%; margin:0 auto 4px auto;"></div>
-                                    <span style="font-size:9pt;">(Staff Produksi)</span>
+                                    Mengetahui,<br><br><br><br>
+                                    <div style="border-top:1px solid #000; width:90%; margin:0 auto;"></div>
                                 </div>
                                 <div class="sig-box">
-                                    Disetujui,<br><br><br><br><br>
-                                    <div style="border-top:1px solid #000; width:80%; margin:0 auto 4px auto;"></div>
-                                    <span style="font-size:9pt;">(Supplier)</span>
+                                    Disetujui,<br><br><br><br>
+                                    <div style="border-top:1px solid #000; width:90%; margin:0 auto;"></div>
                                 </div>
                             </div>
                             
@@ -3425,7 +3353,7 @@
                     window.currentUserName = response.name || user;
 
                     // STAY TO LOGIN (Simpan di memory browser)
-                    localStorage.setItem('authSession', JSON.stringify({
+                    sessionStorage.setItem('authSession', JSON.stringify({
                         user: window.currentUserName,
                         role: window.currentUserRole,
                         unit: window.currentUserUnit
@@ -5454,7 +5382,7 @@
             if(e) e.preventDefault();
             
             const executeLogout = () => {
-                localStorage.removeItem('authSession'); // Hapus Memori 
+                sessionStorage.removeItem('authSession'); // Hapus Memori Sesi Aktif 
                 const loginOverlay = document.getElementById('loginOverlay');
                 if(loginOverlay) { 
                     loginOverlay.classList.remove('hidden'); 
