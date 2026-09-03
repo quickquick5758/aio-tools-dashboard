@@ -1883,7 +1883,7 @@
 
     <script>
         // 1. MASUKKAN URL TERBARU HASIL DEPLOY LANGKAH 1 KE DALAM TANDA KUTIP DI BAWAH INI:
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbxR1A80R4-f5mniS9U3hoYHvFCrcAmW-GkBfhlJGxPYw0Si6iNwuBll9J1BF6abs4EUow/exec"; 
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbw2V5sjY3eDIK02edky-VXqsY5DSKjcky5-zXKlsraR0ht_ClJVscZiz25l74IxNwbpBw/exec"; 
         
         // 2. Mesin Panggil Backend Tahan Banting (Anti-CORS & Anti-Crash)
         async function panggilBackend(actionName, payloadData) {
@@ -1936,7 +1936,6 @@
         window.currentUserRole = "";
         window.currentUserUnit = "";
         window.currentUserName = "";
-        window.currentUserId = ""; // VARIABEL BARU UNTUK AUDIT LOG
         let allOperators = [];
         let globalPayloadToSubmit = null;
         let rawLaporanData = [];
@@ -2040,7 +2039,6 @@
                     window.currentUserName = data.user;
                     window.currentUserRole = data.role;
                     window.currentUserUnit = data.unit;
-                    window.currentUserId = data.userId || data.user; // Tangkap UserId
 
                     document.querySelector('.profile-name').textContent = window.currentUserName;
                     document.querySelector('.profile-role').textContent = `${window.currentUserRole} | ${window.currentUserUnit}`;
@@ -3458,12 +3456,10 @@
                     window.currentUserRole = response.role || "Operator";
                     window.currentUserUnit = response.unit || "";
                     window.currentUserName = response.name || user;
-                    window.currentUserId = user; // Simpan Input ID Form sebagai Id Pelaku
 
                     // STAY TO LOGIN (Simpan di memory browser)
                     sessionStorage.setItem('authSession', JSON.stringify({
                         user: window.currentUserName,
-                        userId: window.currentUserId,
                         role: window.currentUserRole,
                         unit: window.currentUserUnit
                     }));
@@ -3835,9 +3831,7 @@
                 idLaporan: existingId,
                 status: existingStatus,
                 tipe: "PRD", unit, tanggal, karu, shift, pekerjaan,
-                operators: operators.join(', '), items,
-                aktorId: window.currentUserId,
-                aktorName: window.currentUserName
+                operators: operators.join(', '), items
             };
             
             // Langsung eksekusi submit ke server tanpa harus membuka halaman Preview
@@ -3899,9 +3893,7 @@
             globalPayloadToSubmit = {
                 idLaporan: existingId,
                 status: existingStatus,
-                tipe: "BS", unit, tanggal, karu, shift, pekerjaan: "-", operators: "-", items,
-                aktorId: window.currentUserId,
-                aktorName: window.currentUserName
+                tipe: "BS", unit, tanggal, karu, shift, pekerjaan: "-", operators: "-", items
             };
             
             // Langsung eksekusi submit ke server tanpa harus membuka halaman Preview
@@ -4430,11 +4422,7 @@
                 return showDialog("Ada baris bahan baku yang belum lengkap. Silakan lengkapi atau hapus baris kosong!", "warning");
             }
 
-            const payload = { 
-                unit, tanggal, pekerjaan, operator, shift, supplier, refDokumen, refOm, ketHeader, items,
-                aktorId: window.currentUserId,
-                aktorName: window.currentUserName
-            };
+            const payload = { unit, tanggal, pekerjaan, operator, shift, supplier, refDokumen, refOm, ketHeader, items };
 
             const modalAnim = document.getElementById('modal-success-anim');
             const loaderContainer = document.getElementById('loader-icon-container');
@@ -5556,13 +5544,7 @@
                     actionsContainer.innerHTML = '<span style="color:#2b3674; font-weight:bold;">Memproses pembatalan...</span>';
                 }
 
-                const objBatal = {
-                    idLaporan: idLaporan, 
-                    aktorId: window.currentUserId, 
-                    aktorName: window.currentUserName
-                };
-
-                panggilBackend('updateStatusBatal', objBatal)
+                panggilBackend('updateStatusBatal', { idLaporan: idLaporan })
                     .then(res => {
                         if (res && res.success) {
                             document.getElementById('doc-open-badge').innerHTML = '<span style="background:#fce8e8; color:#ee5d50; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; vertical-align:middle; margin-left:10px;">BATAL</span>';
@@ -5595,14 +5577,8 @@
                 }
 
                 try {
-                    const objApprove = {
-                       idLaporan: idLaporan, 
-                       aktorId: window.currentUserId, 
-                       aktorName: window.currentUserName
-                    };
-
                     // Nembak ke Backend pakai fetch (pengganti google.script.run)
-                    const res = await panggilBackend('updateStatusApprove', objApprove);
+                    const res = await panggilBackend('updateStatusApprove', { idLaporan: idLaporan });
                     
                     if (res && res.success) {
                         // Munculkan Modal Animasi Sukses
