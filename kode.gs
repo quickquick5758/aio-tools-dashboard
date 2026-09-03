@@ -1,6 +1,23 @@
 const MASTER_FILE_ID = '1vuHgFUcSOUzBonCF_w_e3j-sBYlQQy8o6clL4GmcuXQ';
 const PROD_FILE_ID = '1z2ujQKRApsrlY_81lVSgUOtQnHMqSBSgsTtna5oF2JE';
 
+// --- FUNGSI PENCATAT LOG AKTIFITAS (AUDIT TRAIL) ---
+function catatLogAktifitas(aktifitas, idUser, namaUser, noDokumen, status) {
+  try {
+    const ss = SpreadsheetApp.openById(PROD_FILE_ID);
+    let sheet = ss.getSheetByName("LOG_AKTIFITAS");
+    if (!sheet) {
+      sheet = ss.insertSheet("LOG_AKTIFITAS");
+      sheet.appendRow(["Waktu Server", "Aktifitas", "ID Akun", "Nama", "No. Dokumen", "Status"]);
+    }
+    // Format Waktu WIB (Asia/Jakarta)
+    const timestamp = Utilities.formatDate(new Date(), "Asia/Jakarta", "yyyy-MM-dd HH:mm:ss");
+    sheet.appendRow([timestamp, aktifitas, idUser || "-", namaUser || "-", noDokumen || "-", status]);
+  } catch (e) {
+    console.error("Gagal catat log:", e.message);
+  }
+}
+
 function doGet(e) {
   return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle('AiO-Tools Dashboard')
@@ -487,8 +504,17 @@ function saveProduksiToSheet(data) {
       globalSheet.appendRow([unit, idLaporan, data.tanggal, data.tipe, data.karu, data.shift, data.pekerjaan, data.operators, totalQtyGlobal, docStatus]);
     }
 
+    // CATAT LOG AKTIVITAS (SIMPAN PRODUKSI)
+    const namaAksiLog = isEdit ? "Edit Form Laporan" : "Submit Form Laporan";
+    catatLogAktifitas(namaAksiLog, data.aktorId, data.aktorName, idLaporan, "Berhasil");
+
     return { success: true, idLaporan: idLaporan };
   } catch (error) {
+    
+    // CATAT LOG AKTIVITAS JIKA GAGAL
+    let failId = data && data.idLaporan ? data.idLaporan : "Dokumen Baru";
+    catatLogAktifitas("Submit/Edit Laporan", data ? data.aktorId : "-", data ? data.aktorName : "-", failId, "Gagal");
+    
     return { success: false, message: error.toString() };
   }
 }
@@ -522,7 +548,8 @@ function getSisaOmData() {
   }
 }
 
-function updateStatusBatal(idLaporan) {
+function updateStatusBatal(data) {
+  const idLaporan = data.idLaporan;
   try {
     const ss = SpreadsheetApp.openById(PROD_FILE_ID);
     const sheetGlobal = ss.getSheetByName("DATA_PRODUKSI_GLOBAL");
@@ -532,7 +559,6 @@ function updateStatusBatal(idLaporan) {
 
     let updatedCount = 0;
 
-    // 1. Update Global: Status -> "Batal", Total Qty -> 0
     const dataGlobal = sheetGlobal.getDataRange().getValues();
     for (let i = 0; i < dataGlobal.length; i++) {
       if (dataGlobal[i][1] === idLaporan) {
@@ -542,7 +568,6 @@ function updateStatusBatal(idLaporan) {
       }
     }
 
-    // 2. Update Detail: Status -> "Batal", Qty -> 0, Insentif -> 0
     const dataDetail = sheetDetail.getDataRange().getValues();
     for (let i = 0; i < dataDetail.length; i++) {
       if (dataDetail[i][1] === idLaporan) {
@@ -553,8 +578,54 @@ function updateStatusBatal(idLaporan) {
     }
 
     if (updatedCount === 0) return { success: false, message: "ID Laporan tidak ditemukan." };
+    
+    // CATAT LOG Batal Berhasil
+    catatLogAktifitas("Pembatalan Laporan", data.aktorId, data.aktorName, idLaporan, "Berhasil");
     return { success: true, message: "Dokumen dibatalkan." };
   } catch (e) {
+    catatLogAktifitas("Pembatalan Laporan", data.aktorId, data.aktorName, idLaporan, "Gagal");
+    return { success: false, message: e.message };
+  }
+}
+
+function updateStatusApprove(data) {
+  const idLaporan = data.idLaporan;
+  try {
+    const ss = SpreadsheetApp.openById(PROD_FILE_ID);
+    
+    const sheetGlobal = ss.getSheetByName("DATA_PRODUKSI_GLOBAL"); 
+    const sheetDetail = ss.getSheetByName("DATA_PRODUKSI_DETAIL"); 
+    
+    if (!sheetGlobal || !sheetDetail) {
+      throw new Error("Sheet Database Produksi tidak ditemukan di server.");
+    }
+
+    let updatedCount = 0;
+
+    const dataGlobal = sheetGlobal.getDataRange().getValues();
+    for (let i = 0; i < dataGlobal.length; i++) {
+      if (dataGlobal[i][1] === idLaporan) {
+        sheetGlobal.getRange(i + 1, 10).setValue("Approved");
+        updatedCount++;
+      }
+    }
+
+    const dataDetail = sheetDetail.getDataRange().getValues();
+    for (let i = 0; i < dataDetail.length; i++) {
+      if (dataDetail[i][1] === idLaporan) {
+        sheetDetail.getRange(i + 1, 18).setValue("Approved");
+      }
+    }
+
+    if (updatedCount === 0) {
+      return { success: false, message: "ID Laporan " + idLaporan + " tidak ditemukan." };
+    }
+
+    // CATAT LOG Approve Berhasil
+    catatLogAktifitas("Approval Laporan", data.aktorId, data.aktorName, idLaporan, "Berhasil");
+    return { success: true, message: "Dokumen berhasil disahkan!" };
+  } catch (e) {
+    catatLogAktifitas("Approval Laporan", data.aktorId, data.aktorName, idLaporan, "Gagal");
     return { success: false, message: e.message };
   }
 }
@@ -910,9 +981,15 @@ function saveBbkToSheet(data) {
       ]);
     }
 
+    // CATAT LOG AKTIVITAS (SIMPAN BBK)
+    catatLogAktifitas("Submit Form Pengecekan (BBK)", data.aktorId, data.aktorName, noDokumenBBK, "Berhasil");
+
     // Kembalikan ID Dokumen ke frontend
     return { success: true, idLaporan: noDokumenBBK };
   } catch(error) {
+    // CATAT LOG AKTIVITAS JIKA GAGAL
+    catatLogAktifitas("Submit Form Pengecekan (BBK)", data ? data.aktorId : "-", data ? data.aktorName : "-", "-", "Gagal");
+    
     return { success: false, message: error.toString() };
   }
 }
@@ -968,10 +1045,10 @@ function doPost(e) {
       result = getSisaOmData();
     }
     else if (action === 'updateStatusBatal') {
-      result = updateStatusBatal(payload.idLaporan);
+      result = updateStatusBatal(payload);
     }
     else if (action === 'updateStatusApprove') {
-      result = updateStatusApprove(payload.idLaporan);
+      result = updateStatusApprove(payload);
     }
     else if (action === 'getTrackingSjData') {
       result = getTrackingSjData();
